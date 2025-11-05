@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <unistd.h>
+#include <vector>
 
 namespace shell{
 
@@ -55,14 +56,36 @@ void exec_type(const std::string &command) {
     std::cout << command << ": not found" << std::endl;
 }
 
-void exec_builtin(const std::string &command) {
-  if (command.starts_with("exit ")) exit(0);
-  else if (command.starts_with("echo ")) std::cout << command.substr(5) << std::endl;
-  else if (command.starts_with("type ")) exec_type(command.substr(5));
+void exec_echo(const std::string& args){
+    std::cout << args << std::endl;
 }
 
-void exec(const std::string &command, const std::string &args = "") {
-  if (is_builtin(command)) return exec_builtin(command);
+void exec_builtin(const std::vector<std::string> &command) {
+  if (command.at(0) == "exit") exit(0);
+  else if (command.at(0) == "echo") exec_echo(command.at(1)); 
+  else if (command.at(0) == "type") exec_type(command.at(1));
+}
+
+std::vector<std::string> get_args (const std::string& request) {
+  std::istringstream iss(request);
+  std::vector<std::string> tokens;
+  std::string args;
+  std::string command;
+
+  iss >> command;
+  std::getline(iss, args);
+  args = args == "" ? "" : args.substr(1) ;
+
+  tokens.emplace_back(command);
+  tokens.emplace_back(args);
+  
+  return tokens;
+}
+
+void exec(const std::string &command) { //, const std::string &args = "") {
+  std::vector<std::string> args = get_args(command);
+
+  if (is_builtin(args.at(0))) return exec_builtin(args);
 
   std::cout << command << ": command not found" << std::endl;
 }
