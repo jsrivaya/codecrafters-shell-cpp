@@ -1,11 +1,10 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <filesystem>
-
 #include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <unistd.h>
 #include <vector>
 
@@ -60,33 +59,36 @@ void exec_echo(const std::string& args){
     std::cout << args << std::endl;
 }
 
-void exec_builtin(const std::vector<std::string> &command) {
+void exec_builtin(const std::vector<std::string>& command) {
   if (command.at(0) == "exit") exit(0);
   else if (command.at(0) == "echo") exec_echo(command.at(1)); 
   else if (command.at(0) == "type") exec_type(command.at(1));
 }
 
+void exec_custom(const std::vector<std::string>& command) {
+  if (auto path = find(command.at(0)); path != "")
+    std::system((command.at(0) + " " + command.at(1)).c_str());
+  else
+    std::cout << command.at(0) << ": not found" << std::endl;
+}
+
 std::vector<std::string> get_args (const std::string& request) {
   std::istringstream iss(request);
-  std::vector<std::string> tokens;
   std::string args;
   std::string command;
 
   iss >> command;
   std::getline(iss, args);
   args = args == "" ? "" : args.substr(1) ;
-
-  tokens.emplace_back(command);
-  tokens.emplace_back(args);
   
-  return tokens;
+  return std::vector<std::string>{command, args};
 }
 
-void exec(const std::string &command) { //, const std::string &args = "") {
+void exec(const std::string &command) {
   std::vector<std::string> args = get_args(command);
 
   if (is_builtin(args.at(0))) return exec_builtin(args);
 
-  std::cout << command << ": command not found" << std::endl;
+  return exec_custom(args);
 }
 } // namespace shell
