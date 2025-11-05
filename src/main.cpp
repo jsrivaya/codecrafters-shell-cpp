@@ -8,13 +8,13 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  while(true) {
+  do {
     std::cout << "$ ";
     std::string command{};
     std::getline(std::cin, command);
 
     shell::exec(command);
-  }
+  } while(true);
 
   exit(0);
 }
