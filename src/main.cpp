@@ -1,12 +1,16 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <vector>
 #include <unordered_set>
 #include <filesystem>
 
 #include <cstdlib>
 #include <unistd.h>
+
+bool is_exec(const std::string& path) {
+  if(std::filesystem::exists(path)) return (access(path.c_str(), X_OK) == 0);
+  return false;
+}
 
 std::string find(const std::string& command) {
   
@@ -15,22 +19,22 @@ std::string find(const std::string& command) {
   else return "";
 
   size_t start = 0;
-  size_t end = path_env.find_first_of(":");
-  while(start < path_env.size()) {
+  for(size_t start = 0; start < path_env.size();) {
+    size_t end = path_env.find_first_of(":", start);
+    if (end == std::string::npos) end = path_env.size();
+
     std::string dir = path_env.substr(start, end - start);
+
     std::filesystem::path p = dir;
     p /= command;
-    if (std::filesystem::exists(p)) {
+
+    if (std::filesystem::exists(p) && is_exec(p.string())) {
       return p.string();
     }
+    start = end + 1;
   }
 
   return "";
-}
-
-bool is_exec(const std::string& path) {
-  if(std::filesystem::exists(path)) return (access(path.c_str(), X_OK) == 0);
-  return false;
 }
 
 int main() {
@@ -55,7 +59,7 @@ int main() {
     } else if (command.starts_with("type")) {
       if(is_builtin(command)) std::cout << command.substr(5) << " is a shell builtin" << std::endl;
       else {
-        if (auto path = find(command); path != "" && is_exec(path)) std::cout << command.substr(5) << path << std::endl;
+        if (auto path = find(command.substr(5)); path != "") std::cout << command.substr(5) << " is " << path << std::endl;
         else std::cout << command.substr(5) << ": not found" << std::endl;
       }
     } else {
