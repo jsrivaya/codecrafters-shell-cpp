@@ -16,11 +16,7 @@ int main() {
     if(command.starts_with("exit")) {
       exit(0);
     } else if (command.starts_with("echo")) {
-      std::istringstream iss(command);
-      std::string token{};
-      while (iss >> token) {
-          if(token != "echo") std::cout << token << " ";
-      }
+      std::cout << command.substr(5);
     }
 
     std::cout << command << ": command not found" << std::endl;
