@@ -16,8 +16,7 @@ int main() {
     if(command.starts_with("exit")) {
       exit(0);
     } else if (command.starts_with("echo")) {
-      std::cout << command.substr(5);
-      exit(0);
+      std::cout << command.substr(5) << std::endl;
     } else {
       std::cout << command << ": command not found" << std::endl;
     }
