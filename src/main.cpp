@@ -9,7 +9,7 @@ int main() {
   while(true) {
     std::cout << "$ ";
     std::string command{};
-    std::getline(std::cin, command, ' ');
+    std::getline(std::cin, command);
 
     if(command.starts_with("exit ")) {
       exit(0);
