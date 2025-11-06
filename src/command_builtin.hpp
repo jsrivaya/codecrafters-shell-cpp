@@ -34,28 +34,7 @@ class BuiltinCommand : public Command {
                 std::cout << "cd: " + path + ": No such file or directory" << std::endl;
         }
         void echo(const std::string& args) {
-            std::string trimmed{};
-            bool in_quotes = false;
-            bool prev_space = false;
-            for(const auto& c : args) {
-                if (c == '\'') {
-                    in_quotes = !in_quotes;
-                    prev_space = false;
-                    continue;
-                }
-
-                if (c == ' ' && !in_quotes) {
-                    if(prev_space) continue;
-
-                    prev_space = true;
-                    trimmed += c;
-                    continue;
-                }
-
-                trimmed += c;
-                prev_space = false;
-            }
-            std::cout << trimmed << std::endl;
+            std::cout << trim(args) << std::endl;
         }
         void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
@@ -74,8 +53,43 @@ class BuiltinCommand : public Command {
             } catch (const std::runtime_error&) {
                 std::cout << c->get_name() << ": not found" << std::endl;
             }
+        }
+        std::string trim(const std::string& s) {
+            std::string trimmed{};
+            bool in_quotes = false;
+            bool in_double_quotes = false;
+            bool prev_space = false;
+            for(const auto& c : s) {
+                if(c == '"'){
+                    in_double_quotes = ! in_double_quotes;
+                    in_quotes = false;
+                    prev_space = false;
+                    continue;
+                }
 
-            return;
+                if(in_double_quotes) {
+                    trimmed += c;
+                    continue;
+                }
+
+                if (c == '\'') {
+                    in_quotes = !in_quotes;
+                    prev_space = false;
+                    continue;
+                }
+
+                if (c == ' ' && !in_quotes) {
+                    if(prev_space) continue;
+
+                    prev_space = true;
+                    trimmed += c;
+                    continue;
+                }
+
+                trimmed += c;
+                prev_space = false;
+            }
+            return trimmed;
         }
 };
 
