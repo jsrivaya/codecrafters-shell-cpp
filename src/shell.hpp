@@ -16,11 +16,6 @@ bool is_builtin(const std::string& command) {
            command.starts_with("type");
 }
 
-bool is_exec(const std::string& path) {
-  if(std::filesystem::exists(path)) return (access(path.c_str(), X_OK) == 0);
-  return false;
-}
-
 std::string find(const std::string& command) {
   
   std::string path_env{};
@@ -37,7 +32,7 @@ std::string find(const std::string& command) {
     std::filesystem::path p = dir;
     p /= command;
 
-    if (std::filesystem::exists(p) && is_exec(p.string())) {
+    if (std::filesystem::exists(p) && access(p.c_str(), X_OK) == 0) {
       return p.string();
     }
     start = end + 1;
