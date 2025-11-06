@@ -54,20 +54,30 @@ class BuiltinCommand : public Command {
                 std::cout << c->get_name() << ": not found" << std::endl;
             }
         }
-        std::string trim(const std::string& s) {
+        std::string trim(const std::string& s) { // sniff sniff, not great
             std::string trimmed{};
             bool in_quotes = false;
             bool in_double_quotes = false;
             bool prev_space = false;
+            bool escaped = false;
             for(const auto& c : s) {
-                if(c == '"'){
+                if (escaped) {
+                    trimmed += c;
+                    escaped = !escaped;
+                    continue;
+                }
+                if (c == '\\') {
+                    escaped = true;
+                    continue;
+                }
+                if (c == '"'){
                     in_double_quotes = ! in_double_quotes;
                     in_quotes = false;
                     prev_space = false;
                     continue;
                 }
 
-                if(in_double_quotes) {
+                if (in_double_quotes) {
                     trimmed += c;
                     continue;
                 }
