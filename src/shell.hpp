@@ -22,7 +22,6 @@ std::pair<std::string, std::string> get_args (const std::string& request) {
 void run(const std::string &command_line) {
   auto [name, args] = get_args(command_line);
 
-  auto c = Command::create(name);
-  c->execute(args);
+  Command::get(name)->execute(args);
 }
 } // namespace shell

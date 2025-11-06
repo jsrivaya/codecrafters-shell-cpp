@@ -6,8 +6,9 @@
 namespace shell {
 class Command {
     public:
-        static std::unique_ptr<Command>  create(const std::string &name);
         Command(const std::string& name, const std::string& type) : name(name), type(type) {};
+        static std::shared_ptr<Command> get(const std::string& name);
+
         virtual void execute(const std::string& args) = 0;
         virtual std::string where_is() = 0;
 

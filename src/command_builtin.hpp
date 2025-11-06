@@ -38,7 +38,7 @@ class BuiltinCommand : public Command {
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
         void exec_type(const std::string &args) {
-            auto c = create(args);
+            auto c = get(args);
 
             if (c->get_type() == "builtin") {
                 std::cout << c->get_name() << " is a shell builtin" << std::endl;
