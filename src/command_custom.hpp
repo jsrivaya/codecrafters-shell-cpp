@@ -1,8 +1,11 @@
 #pragma once
 
 #include "command.hpp"
+
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
+#include <unistd.h>
 
 namespace shell {
 class CustomCommand : public Command {

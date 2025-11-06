@@ -2,8 +2,6 @@
 #include "command_builtin.hpp"
 #include "command_custom.hpp"
 
-#include <memory>
-
 namespace shell {
 
     std::unique_ptr<Command> Command::create(const std::string& name) {

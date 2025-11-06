@@ -1,8 +1,7 @@
 #pragma once
 
-#include <filesystem>
+#include <memory>
 #include <string>
-#include <unistd.h>
 
 namespace shell {
 class Command {
