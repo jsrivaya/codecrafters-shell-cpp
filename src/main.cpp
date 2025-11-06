@@ -13,7 +13,7 @@ int main() {
     std::string command{};
     std::getline(std::cin, command);
 
-    shell::exec(command);
+    shell::run(command);
   } while(true);
 
   exit(0);
