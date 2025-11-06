@@ -34,7 +34,28 @@ class BuiltinCommand : public Command {
                 std::cout << "cd: " + path + ": No such file or directory" << std::endl;
         }
         void echo(const std::string& args) {
-            std::cout << args << std::endl;
+            std::string trimmed{};
+            bool in_quotes = false;
+            bool prev_space = false;
+            for(const auto& c : args) {
+                if (c == '\'') {
+                    in_quotes = !in_quotes;
+                    prev_space = false;
+                    continue;
+                }
+
+                if (c == ' ' && !in_quotes) {
+                    if(prev_space) continue;
+
+                    prev_space = true;
+                    trimmed += c;
+                    continue;
+                }
+
+                trimmed += c;
+                prev_space = false;
+            }
+            std::cout << trimmed << std::endl;
         }
         void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
