@@ -11,11 +11,11 @@ class BuiltinCommand : public Command {
     public:
         BuiltinCommand(const std::string& name) : Command(name, "builtin") { };
         void execute(const std::string& args = "") {
-            if (get_name() == "cd") exec_cd(args); 
-            else if (get_name() == "echo") exec_echo(args); 
+            if (get_name() == "cd") cd(args); 
+            else if (get_name() == "echo") echo(args); 
             else if (get_name() == "exit") exit(0);
-            else if (get_name() == "pwd") exec_pwd();
-            else if (get_name() == "type") exec_type(args);
+            else if (get_name() == "pwd") pwd();
+            else if (get_name() == "type") type(args);
         }
         std::string where_is() {
             return get_name();
@@ -25,19 +25,21 @@ class BuiltinCommand : public Command {
         }
 
     private:
-        void exec_cd(const std::string& path) {
+        void cd(const std::string& path) {
             if (std::filesystem::exists(std::filesystem::path(path)))
                 std::filesystem::current_path(path);
+            else if (auto p = std::getenv("HOME"); path == "~" && p)
+                    std::filesystem::current_path(std::string{p});
             else
                 std::cout << "cd: " + path + ": No such file or directory" << std::endl;
         }
-        void exec_echo(const std::string& args) {
+        void echo(const std::string& args) {
             std::cout << args << std::endl;
         }
-        void exec_pwd() {
+        void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
-        void exec_type(const std::string &args) {
+        void type(const std::string &args) {
             auto c = get(args);
 
             if (c->get_type() == "builtin") {
