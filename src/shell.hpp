@@ -3,11 +3,11 @@
 #include "command.hpp"
 
 #include <sstream>
-#include <vector>
+#include <utility>
 
 namespace shell{
 
-std::vector<std::string> get_args (const std::string& request) {
+std::pair<std::string, std::string> get_args (const std::string& request) {
   std::istringstream iss(request);
   std::string args;
   std::string command;
@@ -16,13 +16,13 @@ std::vector<std::string> get_args (const std::string& request) {
   std::getline(iss, args);
   args = args == "" ? "" : args.substr(1) ;
   
-  return std::vector<std::string>{command, args};
+  return {command, args};
 }
 
 void run(const std::string &command_line) {
-  std::vector<std::string> args = get_args(command_line);
+  auto [name, args] = get_args(command_line);
 
-  auto c = Command::create(args.at(0));
-  c->execute(args.size() > 1 ? args[1] : "");
+  auto c = Command::create(name);
+  c->execute(args);
 }
 } // namespace shell
