@@ -12,7 +12,7 @@ class CustomCommand : public Command {
             try {
                 if (where_is() != "")
                     std::system((get_name() + " " + args).c_str());
-            } catch (const std::runtime_error& e) {
+            } catch (const std::runtime_error&) {
                 std::cout << get_name() << ": not found" << std::endl;
             }
         }

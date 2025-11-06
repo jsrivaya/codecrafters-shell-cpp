@@ -36,7 +36,7 @@ class BuiltinCommand : public Command {
             try {
                 const auto& p = c->where_is();
                 std::cout << c->get_name() << " is " << p << std::endl;
-            } catch (const std::runtime_error& e) {
+            } catch (const std::runtime_error&) {
                 std::cout << c->get_name() << ": not found" << std::endl;
             }
 
