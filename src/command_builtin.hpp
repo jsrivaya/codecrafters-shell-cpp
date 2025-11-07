@@ -59,35 +59,36 @@ class BuiltinCommand : public Command {
             bool in_quotes = false;
             bool in_double_quotes = false;
             bool prev_space = false;
-            bool escaped = false;
+            bool in_escaped = false;
             for(const auto& c : s) {
-                if (escaped) {
+                if (in_escaped) {
                     trimmed += c;
-                    escaped = !escaped;
+                    in_escaped = !in_escaped;
+                    continue;
+                }
+                if (in_quotes && c != '\'') {
+                    trimmed += c;
                     continue;
                 }
                 if (c == '\\') {
-                    escaped = true;
+                    in_escaped = true;
                     continue;
                 }
-                if (c == '"'){
+                if (c == '"') {
                     in_double_quotes = ! in_double_quotes;
                     in_quotes = false;
                     prev_space = false;
                     continue;
                 }
-
                 if (in_double_quotes) {
                     trimmed += c;
                     continue;
                 }
-
                 if (c == '\'') {
                     in_quotes = !in_quotes;
                     prev_space = false;
                     continue;
                 }
-
                 if (c == ' ' && !in_quotes) {
                     if(prev_space) continue;
 
@@ -95,7 +96,6 @@ class BuiltinCommand : public Command {
                     trimmed += c;
                     continue;
                 }
-
                 trimmed += c;
                 prev_space = false;
             }
