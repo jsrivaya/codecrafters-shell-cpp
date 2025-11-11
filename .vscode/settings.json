@@ -64,7 +64,9 @@
         "filesystem": "cpp",
         "deque": "cpp",
         "iomanip": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "__tree": "cpp",
+        "map": "cpp"
     },
     "C_Cpp.default.cppStandard": "c++23"
 }

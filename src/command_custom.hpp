@@ -5,16 +5,37 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <vector> 
 
 namespace shell {
 class CustomCommand : public Command {
     public:
         CustomCommand(const std::string& name) : Command(name, "custom") { };
-        void execute(const std::string& args = "") {
+        void execute(const  std::vector<std::string>&  args = {}) {
             try {
-                if (where_is() != "")
-                    std::system((get_name() + " " + args).c_str());
+                if (where_is() == "") {
+                    std::cout << get_name() << ": not found" << std::endl;
+                    return;
+                }
+                std::vector<char*> argv;
+                argv.emplace_back(const_cast<char*>(get_name().c_str()));
+                for (const auto& a : args)
+                    argv.emplace_back(const_cast<char*>(a.c_str()));
+                argv.push_back(nullptr);
+
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execvp(get_name().c_str(), argv.data());
+                    std::exit(1);
+                } else if (pid > 0) {
+                    // Parent waits
+                    wait(nullptr);
+                } else {
+                    std::cout << get_name() << ": fork failed" << std::endl;
+                }
             } catch (const std::runtime_error&) {
                 std::cout << get_name() << ": not found" << std::endl;
             }

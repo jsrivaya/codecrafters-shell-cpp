@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace shell {
 class Command {
@@ -9,7 +10,7 @@ class Command {
         Command(const std::string& name, const std::string& type) : name(name), type(type) {};
         static std::shared_ptr<Command> get(const std::string& name);
 
-        virtual void execute(const std::string& args) = 0;
+        virtual void execute(const std::vector<std::string>&  args = {}) = 0;
         virtual std::string where_is() = 0;
 
         std::string get_name() { return name; };

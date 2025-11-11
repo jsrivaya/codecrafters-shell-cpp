@@ -12,12 +12,12 @@ namespace shell {
 class BuiltinCommand : public Command {
     public:
         BuiltinCommand(const std::string& name) : Command(name, "builtin") { };
-        void execute(const std::string& args = "") {
-            if (get_name() == "cd") cd(args); 
+        void execute(const  std::vector<std::string>&  args = {}) {
+            if (get_name() == "cd") cd(args.at(0)); 
             else if (get_name() == "echo") echo(args); 
             else if (get_name() == "exit") exit(0);
             else if (get_name() == "pwd") pwd();
-            else if (get_name() == "type") type(args);
+            else if (get_name() == "type") type(args.at(0));
         }
         std::string where_is() {
             return get_name();
@@ -35,8 +35,12 @@ class BuiltinCommand : public Command {
             else
                 std::cout << "cd: " + path + ": No such file or directory" << std::endl;
         }
-        void echo(const std::string& args) {
-            std::cout << trim(args) << std::endl;
+        void echo(const std::vector<std::string>& args) {
+            for (size_t i = 0; i < args.size(); ++i) {
+                std::cout << args[i];
+                if (i < args.size() - 1) std::cout << " ";
+            }
+            std::cout << std::endl;
         }
         void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
