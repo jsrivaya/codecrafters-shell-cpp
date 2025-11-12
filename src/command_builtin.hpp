@@ -51,16 +51,16 @@ class BuiltinCommand : public Command {
         }
         void type(const  std::vector<std::string>& args) {
             for (const auto& a : args) {
-                auto command = get_command(a);
-                if (command->get_type() == "builtin") {
-                    std::cout << command->get_name() << " is a shell builtin" << std::endl;
+                if (BuiltinCommand::is_builtin(a)) {
+                    std::cout << a << " is a shell builtin" << std::endl;
                     return;
                 }
                 try {
+                    auto command = get_command({a});
                     const auto& path = command->where_is();
-                    std::cout << command->get_name() << " is " << path << std::endl;
+                    std::cout << a << " is " << path << std::endl;
                 } catch (const std::runtime_error&) {
-                    std::cerr << command->get_name() << ": not found" << std::endl;
+                    std::cerr << a << ": not found" << std::endl;
                 }
             }
         }

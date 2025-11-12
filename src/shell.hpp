@@ -8,7 +8,10 @@
 
 namespace shell{
 
-std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) {
+// std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) {
+// return: { arg0, arg1, arg2, arg3 }
+// (e.g {cat, /tmp/file.txt, >, myfile.txt})
+std::vector<std::string> get_tokens(const std::string& s) {
     std::string current_token{};
     std::vector<std::string> tokens{};
     bool in_quotes = false;
@@ -63,19 +66,37 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
     }
     if(!current_token.empty()) tokens.emplace_back(current_token);
 
-    // separate command from arguments
-    std::string command{};
-    if (!tokens.empty()) {
-        command = tokens.at(0);
-        tokens.erase(tokens.begin());
-    }
+    return tokens;
+}
 
-    return {command, tokens};
+bool is_delimeter(const std::string& name) {
+    return name == ">" || name == ">>" || name == "|";
+}
+
+// return: { command, arg1, arg2, arg3 }
+std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_line) {
+    std::vector<std::shared_ptr<Command>> commands{};
+    std::vector<std::string> args{};
+
+    for (const auto& token : get_tokens(command_line)) {
+        if (!is_delimeter(token)) {
+            args.emplace_back(token);
+        } else {
+            commands.emplace_back(Command::get_command(args));
+            args = {};
+        }
+    }
+    // last element
+    commands.emplace_back(Command::get_command(args));
+
+    return commands;
 }
 
 void run(const std::string &command_line) {
-    auto [name, args] = get_args(command_line);
 
-    if (!name.empty()) Command::get_command(name, args)->execute();
+    for (const auto& c : get_commands(command_line)) {
+        c->execute();
+    }
+
 }
 } // namespace shell
