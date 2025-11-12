@@ -20,7 +20,7 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
         if(in_escaped) {
             // Inside double quotes: \ only escapes $, ', ", \, or newline — otherwise it's literal
             if(in_double_quotes && (c !='$' && c != '`' && c != '"' && c != '\\')) {
-                current_token += "\\"; // we preseve backslace
+                current_token += "\\"; // we preseve backslash
             }
             current_token += c;
             in_escaped = false;
@@ -54,10 +54,8 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
             if(prev_space) continue;
 
             prev_space = true;
-            // current_token += c;
             tokens.emplace_back(current_token);
             current_token = {};
-            // std::cout << "Adding to tokens" << std::endl;
             continue;
         }
         current_token += c;

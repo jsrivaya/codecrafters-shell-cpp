@@ -2,7 +2,6 @@
 
 #include "command.hpp"
 #include "command_custom.hpp"
-#include "utils.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -33,7 +32,7 @@ class BuiltinCommand : public Command {
             else if (auto p = std::getenv("HOME"); path == "~" && p)
                     std::filesystem::current_path(std::string{p});
             else
-                std::cout << "cd: " + path + ": No such file or directory" << std::endl;
+                std::cerr << "cd: " + path + ": No such file or directory" << std::endl;
         }
         void echo(const std::vector<std::string>& args) {
             for (size_t i = 0; i < args.size(); ++i) {
@@ -57,7 +56,7 @@ class BuiltinCommand : public Command {
                 const auto& p = c->where_is();
                 std::cout << c->get_name() << " is " << p << std::endl;
             } catch (const std::runtime_error&) {
-                std::cout << c->get_name() << ": not found" << std::endl;
+                std::cerr << c->get_name() << ": not found" << std::endl;
             }
         }
 };

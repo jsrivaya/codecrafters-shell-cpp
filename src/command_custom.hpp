@@ -16,10 +16,8 @@ class CustomCommand : public Command {
         CustomCommand(const std::string& name) : Command(name, "custom") { };
         void execute(const  std::vector<std::string>&  args = {}) {
             try {
-                if (where_is() == "") {
-                    std::cout << get_name() << ": not found" << std::endl;
-                    return;
-                }
+                if (where_is() == "") return;
+                
                 std::vector<char*> argv;
                 argv.emplace_back(const_cast<char*>(get_name().c_str()));
                 for (const auto& a : args)
@@ -34,10 +32,10 @@ class CustomCommand : public Command {
                     // Parent waits
                     wait(nullptr);
                 } else {
-                    std::cout << get_name() << ": fork failed" << std::endl;
+                    std::cerr << get_name() << ": fork failed" << std::endl;
                 }
             } catch (const std::runtime_error&) {
-                std::cout << get_name() << ": not found" << std::endl;
+                std::cerr << get_name() << ": not found" << std::endl;
             }
         }
         std::string where_is() {
