@@ -13,8 +13,8 @@
 namespace shell {
 class CustomCommand : public Command {
     public:
-        CustomCommand(const std::string& name) : Command(name, "custom") { };
-        void execute(const std::vector<std::string>&  args = {}) {
+        CustomCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "custom", args) { };
+        void execute() {
             try {
                 if (where_is() != "") {
                     auto argv = get_argv(args);

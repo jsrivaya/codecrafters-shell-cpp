@@ -10,8 +10,8 @@
 namespace shell {
 class BuiltinCommand : public Command {
     public:
-        BuiltinCommand(const std::string& name) : Command(name, "builtin") { };
-        void execute(const  std::vector<std::string>&  args = {}) {
+        BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
+        void execute() {
             // Builtin commands like 'cd' need to modify the shell's own state
             // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
             if (get_name() == "cd") cd(args); 
