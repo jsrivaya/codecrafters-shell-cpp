@@ -24,8 +24,6 @@ class CustomCommand : public Command {
                 std::cerr << get_name() << ": not found" << std::endl;
             }
         }
-
-    private:
         std::string where_is() {
             if(const auto p = std::getenv("PATH"); p) {
                 std::string path_env{p};
@@ -42,6 +40,7 @@ class CustomCommand : public Command {
             }
             throw std::runtime_error("Command not found");   
         }
+    private:
         void spawn(const std::vector<char*>&  argv = {}) {
             pid_t pid = fork();
             if (pid == 0) {
