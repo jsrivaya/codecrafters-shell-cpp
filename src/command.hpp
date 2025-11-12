@@ -8,7 +8,7 @@ namespace shell {
 class Command {
     public:
         Command(const std::string& name, const std::string& type) : name(name), type(type) {};
-        static std::shared_ptr<Command> get(const std::string& name);
+        static std::shared_ptr<Command> get_command(const std::string& name);
 
         virtual void execute(const std::vector<std::string>&  args = {}) = 0;
         virtual std::string where_is() = 0;

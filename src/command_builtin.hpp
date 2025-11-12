@@ -18,7 +18,7 @@ class BuiltinCommand : public Command {
             else if (get_name() == "echo") echo(args); 
             else if (get_name() == "exit") exit(0);
             else if (get_name() == "pwd") pwd();
-            else if (get_name() == "type") type(args.at(0));
+            else if (get_name() == "type") type(args);
         }
         std::string where_is() {
             return get_name();
@@ -49,19 +49,19 @@ class BuiltinCommand : public Command {
         void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
-        void type(const std::string &args) {
-            auto c = get(args);
-
-            if (c->get_type() == "builtin") {
-                std::cout << c->get_name() << " is a shell builtin" << std::endl;
-                return;
-            }
-
-            try {
-                const auto& p = c->where_is();
-                std::cout << c->get_name() << " is " << p << std::endl;
-            } catch (const std::runtime_error&) {
-                std::cerr << c->get_name() << ": not found" << std::endl;
+        void type(const  std::vector<std::string>& args) {
+            for (const auto& a : args) {
+                auto command = get_command(a);
+                if (command->get_type() == "builtin") {
+                    std::cout << command->get_name() << " is a shell builtin" << std::endl;
+                    return;
+                }
+                try {
+                    const auto& path = command->where_is();
+                    std::cout << command->get_name() << " is " << path << std::endl;
+                } catch (const std::runtime_error&) {
+                    std::cerr << command->get_name() << ": not found" << std::endl;
+                }
             }
         }
 };

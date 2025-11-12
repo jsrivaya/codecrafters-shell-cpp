@@ -73,6 +73,6 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
 void run(const std::string &command_line) {
     auto [name, args] = get_args(command_line);
 
-    Command::get(name)->execute(args);
+    Command::get_command(name)->execute(args);
 }
 } // namespace shell

@@ -7,7 +7,7 @@
 
 namespace shell {
 
-    std::shared_ptr<Command> Command::get(const std::string& name) {
+    std::shared_ptr<Command> Command::get_command(const std::string& name) {
         static std::unordered_map<std::string, std::shared_ptr<Command>> cache;
 
         static std::mutex mtx;
