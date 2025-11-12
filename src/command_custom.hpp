@@ -14,30 +14,18 @@ namespace shell {
 class CustomCommand : public Command {
     public:
         CustomCommand(const std::string& name) : Command(name, "custom") { };
-        void execute(const  std::vector<std::string>&  args = {}) {
+        void execute(const std::vector<std::string>&  args = {}) {
             try {
-                if (where_is() == "") return;
-                
-                std::vector<char*> argv;
-                argv.emplace_back(const_cast<char*>(get_name().c_str()));
-                for (const auto& a : args)
-                    argv.emplace_back(const_cast<char*>(a.c_str()));
-                argv.push_back(nullptr);
-
-                pid_t pid = fork();
-                if (pid == 0) {
-                    execvp(get_name().c_str(), argv.data());
-                    std::exit(1);
-                } else if (pid > 0) {
-                    // Parent waits
-                    wait(nullptr);
-                } else {
-                    std::cerr << get_name() << ": fork failed" << std::endl;
+                if (where_is() != "") {
+                    auto argv = get_argv(args);
+                    spawn(argv);
                 }
             } catch (const std::runtime_error&) {
                 std::cerr << get_name() << ": not found" << std::endl;
             }
         }
+
+    private:
         std::string where_is() {
             if(const auto p = std::getenv("PATH"); p) {
                 std::string path_env{p};
@@ -53,6 +41,27 @@ class CustomCommand : public Command {
                 }
             }
             throw std::runtime_error("Command not found");   
+        }
+        void spawn(const std::vector<char*>&  argv = {}) {
+            pid_t pid = fork();
+            if (pid == 0) {
+                execvp(get_name().c_str(), argv.data());
+                std::exit(1);
+            } else if (pid > 0) {
+                // Parent waits
+                wait(nullptr);
+            } else {
+                std::cerr << get_name() << ": fork failed" << std::endl;
+            }
+        }
+        std::vector<char*> get_argv(const std::vector<std::string>&  args = {}) {
+            std::vector<char*> argv;
+            argv.emplace_back(const_cast<char*>(get_name().c_str()));
+            for (const auto& a : args)
+                argv.emplace_back(const_cast<char*>(a.c_str()));
+
+            argv.push_back(nullptr);
+            return argv;
         }
 };
 

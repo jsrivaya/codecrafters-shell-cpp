@@ -76,6 +76,10 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
 void run(const std::string &command_line) {
     auto [name, args] = get_args(command_line);
 
+    // find each command
+    // find redirects if exists
+    // identify type of redirect: '>' '>>' or '|'
+    // fork once per command
     if (!name.empty()) Command::get_command(name)->execute(args);
 }
 } // namespace shell
