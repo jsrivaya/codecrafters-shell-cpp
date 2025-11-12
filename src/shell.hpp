@@ -64,8 +64,11 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
     if(!current_token.empty()) tokens.emplace_back(current_token);
 
     // separate command from arguments
-    auto command = tokens.at(0);
-    tokens.erase(tokens.begin());
+    std::string command{};
+    if (!tokens.empty()) {
+        command = tokens.at(0);
+        tokens.erase(tokens.begin());
+    }
 
     return {command, tokens};
 }
@@ -73,6 +76,6 @@ std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) 
 void run(const std::string &command_line) {
     auto [name, args] = get_args(command_line);
 
-    Command::get_command(name)->execute(args);
+    if (!name.empty()) Command::get_command(name)->execute(args);
 }
 } // namespace shell
