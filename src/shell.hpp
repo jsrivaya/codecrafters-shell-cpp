@@ -73,25 +73,31 @@ std::vector<std::string> get_tokens(const std::string& s) {
 }
 
 bool is_delimeter(const std::string& name) {
-    return name == "1>" || name == ">" || name == ">>" || name == "|";
+    return name == "1>" || name == ">" || name == ">>" ||
+            name == "2>" || name == "|";
 }
 
-void reset_stdout(int saved_stdout) {
-    fflush(stdout);
-    dup2(saved_stdout, STDOUT_FILENO); // Restore the saved fd to stdout
-    close(saved_stdout); // Clean up
+void reset_stdio(int io_fileno, int saved_stdio) {
+    dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
+    close(saved_stdio); // Clean up
 }
-void set_stdout(const std::string& delimeter, const std::string& filename) {
+
+void set_stdio_fileno(const int stdio, const std::string& filename, const int flags) {
     int fd = -1;
-    if (delimeter == "1>" || delimeter == ">") {
-        fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    } else if (delimeter == ">>") {
-        fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
-    }
+    fd = open(filename.c_str(), flags, 0644);
+
     if (fd >= 0) {
-        fflush(stdout);
-        dup2(fd, STDOUT_FILENO);
+        dup2(fd, stdio);
         close(fd);
+    }
+}
+void set_stdio(const std::string& delimeter, const std::string& filename) {
+    if (delimeter == "1>" || delimeter == ">") {
+        set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
+    } else if (delimeter == ">>") {
+        set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
+    } else if (delimeter == "2>") {
+        set_stdio_fileno(STDERR_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
     }
 }
 
@@ -109,7 +115,7 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
             if (i+1 < tokens.size()) {
                 // we look into the next token to find the output file
                 // classify delimeter, for now assume its "1>" or ">" or "">>""
-                set_stdout(token, tokens.at(++i));
+                set_stdio(token, tokens.at(++i));
             }
 
             commands.emplace_back(std::move(command));
@@ -125,10 +131,12 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
 void run(const std::string &command_line) {
 
     auto saved_stdout = dup(STDOUT_FILENO);
+    auto saved_stderr = dup(STDERR_FILENO);
     for (const auto& c : get_commands(command_line)) {
         c->execute();
     }
-    reset_stdout(saved_stdout);
+    reset_stdio(STDERR_FILENO, saved_stderr);
+    reset_stdio(STDOUT_FILENO, saved_stdout);
 
 }
 } // namespace shell
