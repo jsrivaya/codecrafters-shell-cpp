@@ -74,7 +74,7 @@ std::vector<std::string> get_tokens(const std::string& s) {
 
 bool is_delimeter(const std::string& name) {
     return name == "1>" || name == ">" || name == ">>" || name == "1>>" ||
-            name == "2>" || name == "|";
+            name == "2>" || name == "2>>" || name == "|";
 }
 
 void reset_stdio(int io_fileno, int saved_stdio) {
