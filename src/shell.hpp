@@ -73,7 +73,7 @@ std::vector<std::string> get_tokens(const std::string& s) {
 }
 
 bool is_delimeter(const std::string& name) {
-    return name == "1>" || name == ">" || name == ">>" ||
+    return name == "1>" || name == ">" || name == ">>" || name == "1>>" ||
             name == "2>" || name == "|";
 }
 
@@ -94,9 +94,11 @@ void set_stdio_fileno(const int stdio, const std::string& filename, const int fl
 void set_stdio(const std::string& delimeter, const std::string& filename) {
     if (delimeter == "1>" || delimeter == ">") {
         set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
-    } else if (delimeter == ">>") {
+    } else if (delimeter == "1>>" || delimeter == ">>") {
         set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
     } else if (delimeter == "2>") {
+        set_stdio_fileno(STDERR_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
+    } else if (delimeter == "2>>") {
         set_stdio_fileno(STDERR_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
     }
 }

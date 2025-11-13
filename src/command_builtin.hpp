@@ -45,6 +45,7 @@ class BuiltinCommand : public Command {
                 if (i < args.size() - 1) std::cout << " ";
             }
             std::cout << std::endl;
+            std::cout.flush();
         }
         void pwd() {
             std::cout << std::filesystem::current_path().string() << std::endl;
