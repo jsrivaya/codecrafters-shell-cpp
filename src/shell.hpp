@@ -2,7 +2,10 @@
 
 #include "command.hpp"
 
+#include <fcntl.h>
 #include <sstream>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -70,33 +73,62 @@ std::vector<std::string> get_tokens(const std::string& s) {
 }
 
 bool is_delimeter(const std::string& name) {
-    return name == ">" || name == ">>" || name == "|";
+    return name == "1>" || name == ">" || name == ">>" || name == "|";
 }
 
-// return: { command, arg1, arg2, arg3 }
+void reset_stdout(int saved_stdout) {
+    fflush(stdout);
+    dup2(saved_stdout, STDOUT_FILENO); // Restore the saved fd to stdout
+    close(saved_stdout); // Clean up
+}
+void set_stdout(const std::string& delimeter, const std::string& filename) {
+    int fd = -1;
+    if (delimeter == "1>" || delimeter == ">") {
+        fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    } else if (delimeter == ">>") {
+        fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    }
+    if (fd >= 0) {
+        fflush(stdout);
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+    }
+}
+
 std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_line) {
     std::vector<std::shared_ptr<Command>> commands{};
     std::vector<std::string> args{};
 
-    for (const auto& token : get_tokens(command_line)) {
+    const auto& tokens = get_tokens(command_line);
+    for (int i = 0; i < tokens.size(); ++i) {
+        auto& token = tokens.at(i);
         if (!is_delimeter(token)) {
-            args.emplace_back(token);
+            args.emplace_back(std::move(token));
         } else {
-            commands.emplace_back(Command::get_command(args));
+            auto command = Command::get_command(args);
+            if (i+1 < tokens.size()) {
+                // we look into the next token to find the output file
+                // classify delimeter, for now assume its "1>" or ">" or "">>""
+                set_stdout(token, tokens.at(++i));
+            }
+
+            commands.emplace_back(std::move(command));
             args = {};
         }
     }
     // last element
-    commands.emplace_back(Command::get_command(args));
+    if (!args.empty()) commands.emplace_back(std::move(Command::get_command(args)));
 
     return commands;
 }
 
 void run(const std::string &command_line) {
 
+    auto saved_stdout = dup(STDOUT_FILENO);
     for (const auto& c : get_commands(command_line)) {
         c->execute();
     }
+    reset_stdout(saved_stdout);
 
 }
 } // namespace shell
