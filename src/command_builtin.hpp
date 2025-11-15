@@ -78,6 +78,7 @@ class BuiltinCommand : public Command {
         void spawn(FuncPtr func_ptr, const std::vector<std::string>&  args = {}) {
             pid_t pid = fork();
             if (pid == 0) {
+                dup_io();
                 func_ptr(args);
                 std::exit(1);
             } else if (pid > 0) {

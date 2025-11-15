@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <vector> 
 
 namespace shell {
@@ -44,6 +43,7 @@ class CustomCommand : public Command {
         void spawn(const std::vector<char*>&  argv = {}) {
             pid_t pid = fork();
             if (pid == 0) {
+                dup_io();
                 execvp(get_name().c_str(), argv.data());
                 std::exit(1);
             } else if (pid > 0) {

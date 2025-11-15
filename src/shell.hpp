@@ -3,6 +3,7 @@
 #include "command.hpp"
 
 #include <fcntl.h>
+#include <iostream>
 #include <sstream>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -92,15 +93,33 @@ void set_stdio_fileno(const int stdio, const std::string& filename, const int fl
     }
 }
 
-void set_stdio(const std::string& delimeter, const std::string& filename) {
+int get_stdio_fd(const std::string& filename, const int flags) {
+    int fd = -1;
+    fd = open(filename.c_str(), flags, 0644);
+
+    if (fd >= 0) {
+        return fd;
+    }
+    throw std::runtime_error("shell: could not open file: " + filename);
+}
+
+void set_io(std::shared_ptr<Command> command, const std::string& delimeter, const std::string& filename) {
     if (delimeter == "1>" || delimeter == ">") {
-        set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
+        command->set_stdout(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_TRUNC));
     } else if (delimeter == "1>>" || delimeter == ">>") {
-        set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
+        command->set_stdout(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_APPEND));
     } else if (delimeter == "2>") {
-        set_stdio_fileno(STDERR_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
+        command->set_stderr(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_TRUNC));
     } else if (delimeter == "2>>") {
-        set_stdio_fileno(STDERR_FILENO, filename, O_WRONLY | O_CREAT | O_APPEND);
+        command->set_stderr(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_APPEND));
+    } else if (delimeter == "|") {
+        // command.set_stdin();
+        // command.set_stdout();
+        // command.set_stderr();
+    } else if (delimeter == "&|") {
+        // command.set_stdin();
+        // command.set_stdout();
+        // command.set_stderr();
     }
 }
 
@@ -114,11 +133,11 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
         if (!is_delimeter(token)) {
             args.emplace_back(std::move(token));
         } else {
-            auto command = Command::get_command(args);
+            std::shared_ptr<Command> command = Command::get_command(args);
             if (i+1 < tokens.size()) {
                 // we look into the next token to find the output file
                 // classify delimeter, for now assume its "1>" or ">" or "">>""
-                set_stdio(token, tokens.at(++i));
+                set_io(command, token, tokens.at(++i));
             }
 
             commands.emplace_back(std::move(command));
@@ -133,13 +152,17 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
 
 void run(const std::string &command_line) {
 
-    auto saved_stdout = dup(STDOUT_FILENO);
-    auto saved_stderr = dup(STDERR_FILENO);
-    for (const auto& c : get_commands(command_line)) {
-        c->execute();
+    try {
+        auto saved_stdout = dup(STDOUT_FILENO);
+        auto saved_stderr = dup(STDERR_FILENO);
+        for (const auto& c : get_commands(command_line)) {
+            c->execute();
+        }
+        reset_stdio(STDERR_FILENO, saved_stderr);
+        reset_stdio(STDOUT_FILENO, saved_stdout);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
     }
-    reset_stdio(STDERR_FILENO, saved_stderr);
-    reset_stdio(STDOUT_FILENO, saved_stdout);
 
 }
 } // namespace shell
