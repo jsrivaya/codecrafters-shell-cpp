@@ -91,6 +91,7 @@ void set_stdio_fileno(const int stdio, const std::string& filename, const int fl
         close(fd);
     }
 }
+
 void set_stdio(const std::string& delimeter, const std::string& filename) {
     if (delimeter == "1>" || delimeter == ">") {
         set_stdio_fileno(STDOUT_FILENO, filename, O_WRONLY | O_CREAT | O_TRUNC);
