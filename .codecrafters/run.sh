@@ -7,5 +7,8 @@
 # Learn more: https://codecrafters.io/program-interface
 
 set -e # Exit on failure
+#stty -icanon -echo
 
 exec $(dirname "$0")/build/shell "$@"
+
+# stty sane

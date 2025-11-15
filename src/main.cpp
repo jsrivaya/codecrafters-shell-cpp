@@ -1,19 +1,19 @@
-#include <iostream>
-#include <string>
-
 #include "shell.hpp"
+#include "command_line.hpp"
+
+#include <iostream>
+
 
 int main() {
   // Flush after every std::cout / std:cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  do {
-    std::cout << "$ ";
-    std::string command{};
-    std::getline(std::cin, command);
+  shell::rl_init();
 
-    shell::run(command);
+  do {
+    shell::run(shell::read_line());
+
   } while(true);
 
   exit(0);

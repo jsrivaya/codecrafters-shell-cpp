@@ -26,7 +26,9 @@ class BuiltinCommand : public Command {
         static bool is_builtin(const std::string& name) {
             return name == "cd" || name == "echo" || name == "exit" || name == "pwd" || name == "type";
         }
-
+        static std::vector<std::string> get_all_commands() {
+            return {"cd", "echo", "exit", "pwd", "type"};
+        }
     private:
         void cd(const  std::vector<std::string>& path) {
             if (auto p = std::getenv("HOME"); path.empty() ||
