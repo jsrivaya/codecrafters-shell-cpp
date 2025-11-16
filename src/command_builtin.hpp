@@ -17,7 +17,6 @@ class BuiltinCommand : public Command {
                     // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
                     dup_io();
                     close_io();
-                    close_pipe();
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
                     else if (name == "exit") exit(0);

@@ -23,13 +23,15 @@ class Command {
         std::string get_filename() { return filename; };
         void set_redirection(const std::string& op) { redirection = op; };
         void set_filename(const std::string& name) { filename = name; };
-        void set_pipe(int fd[2]) {
-            pipe_fd[0] = fd[0];
-            pipe_fd[1] = fd[1];
+        void set_pipe_read(int fd) {
+            pipe_read = fd;
+        }
+        void set_pipe_write(int fd) {
+            pipe_write = fd;
         }
         void close_pipe() {
-            if (pipe_fd[0] >= 0) {close(pipe_fd[0]);}
-            if (pipe_fd[1] >= 0) {close(pipe_fd[1]);}
+            if (pipe_read >= 0) { close(pipe_read); }
+            if (pipe_write >= 0) { close(pipe_write); }
         }
         void close_io() {
             if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin);}
@@ -69,7 +71,8 @@ class Command {
 
         std::string redirection{};
         std::string filename{};
-        int pipe_fd[2] = {-1, -1};
+        int pipe_read = -1;
+        int pipe_write = -1;
 };
 
 } // namespace shell

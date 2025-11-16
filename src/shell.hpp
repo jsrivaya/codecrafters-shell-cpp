@@ -115,6 +115,7 @@ void spawn(std::shared_ptr<Command> command) {
     pid_t pid = fork();
     if (pid == 0) {
         command->execute();
+        command->close_pipe();
         std::exit(1);
     }
 }
@@ -124,6 +125,8 @@ void execute(std::shared_ptr<Command> command) {
         spawn(command);
     else
         command->execute();
+
+    command->close_pipe();
 }
 
 void wait_for_commands(size_t n_proc) {
@@ -136,9 +139,10 @@ void wait_and_exit(size_t n_proc) {
     exit(0);
 }
 
-void clean_up_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
-    for (const auto& c : pipeline)
+void close_pipes(std::vector<std::shared_ptr<Command>> pipeline) {
+    for (const auto& c : pipeline) {
         c->close_pipe();
+    }
 }
 
 void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
@@ -156,8 +160,8 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
             auto next_command = pipeline.at(i+1);
             int pipe_fd[2];
             pipe(pipe_fd);
-            command->set_pipe(pipe_fd);
-            next_command->set_pipe(pipe_fd);
+            command->set_pipe_write(pipe_fd[1]);
+            next_command->set_pipe_read(pipe_fd[0]);
 
             command->set_stdout(pipe_fd[1]); // writer side
             next_command->set_stdin(pipe_fd[0]); // reader side
@@ -186,7 +190,7 @@ void run(const std::string &command_line) {
 
         setup_pipeline(pipeline);
         run_pipeline(pipeline);
-        clean_up_pipeline(pipeline);
+        close_pipes(pipeline);
         wait_for_commands(pipeline.size());
         close_pipeline(pipeline);
 
