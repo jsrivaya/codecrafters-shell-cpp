@@ -1,12 +1,11 @@
 #pragma once
 
 #include "command.hpp"
-
+#include "command_builtin.hpp"
 #include <fcntl.h>
 #include <iostream>
 #include <sstream>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -75,52 +74,12 @@ std::vector<std::string> get_tokens(const std::string& s) {
 
 bool is_delimeter(const std::string& name) {
     return name == "1>" || name == ">" || name == ">>" || name == "1>>" ||
-            name == "2>" || name == "2>>" || name == "|";
+            name == "2>" || name == "2>>" || name == "|" || name == "&|";
 }
 
 void reset_stdio(int io_fileno, int saved_stdio) {
     dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
     close(saved_stdio); // Clean up
-}
-
-void set_stdio_fileno(const int stdio, const std::string& filename, const int flags) {
-    int fd = -1;
-    fd = open(filename.c_str(), flags, 0644);
-
-    if (fd >= 0) {
-        dup2(fd, stdio);
-        close(fd);
-    }
-}
-
-int get_stdio_fd(const std::string& filename, const int flags) {
-    int fd = -1;
-    fd = open(filename.c_str(), flags, 0644);
-
-    if (fd >= 0) {
-        return fd;
-    }
-    throw std::runtime_error("shell: could not open file: " + filename);
-}
-
-void set_io(std::shared_ptr<Command> command, const std::string& delimeter, const std::string& filename) {
-    if (delimeter == "1>" || delimeter == ">") {
-        command->set_stdout(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_TRUNC));
-    } else if (delimeter == "1>>" || delimeter == ">>") {
-        command->set_stdout(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_APPEND));
-    } else if (delimeter == "2>") {
-        command->set_stderr(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_TRUNC));
-    } else if (delimeter == "2>>") {
-        command->set_stderr(get_stdio_fd(filename, O_WRONLY | O_CREAT | O_APPEND));
-    } else if (delimeter == "|") {
-        // command.set_stdin();
-        // command.set_stdout();
-        // command.set_stderr();
-    } else if (delimeter == "&|") {
-        // command.set_stdin();
-        // command.set_stdout();
-        // command.set_stderr();
-    }
 }
 
 std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_line) {
@@ -136,8 +95,10 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
             std::shared_ptr<Command> command = Command::get_command(args);
             if (i+1 < tokens.size()) {
                 // we look into the next token to find the output file
-                // classify delimeter, for now assume its "1>" or ">" or "">>""
-                set_io(command, token, tokens.at(++i));
+                // it's the user reponsability to pass a file or command after delimeter
+                command->set_redirection(token);
+                command->set_filename(tokens.at(i+1));
+                if(token != "|") ++i;
             }
 
             commands.emplace_back(std::move(command));
@@ -150,14 +111,85 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
     return commands;
 }
 
+void spawn(std::shared_ptr<Command> command) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        command->execute();
+        std::exit(1);
+    }
+}
+
+void execute(std::shared_ptr<Command> command) {
+    if(BuiltinCommand::is_builtin(command->get_name()))
+        command->execute();
+    else
+        spawn(command);
+}
+
+void wait_for_commands(size_t n_proc) {
+    for (size_t i = 0; i<n_proc; ++i)
+        wait(nullptr);
+}
+
+void wait_and_exit(size_t n_proc) {
+    wait_for_commands(n_proc);
+    exit(0);
+}
+
+void clean_up_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+    for (const auto& c : pipeline)
+        c->close_pipe();
+}
+
+void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+    for (size_t i = 0; i<pipeline.size(); ++i) {
+        auto command = pipeline.at(i);
+        if (command->get_redirection() == "1>" || command->get_redirection() == ">") {
+            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC));
+        } else if (command->get_redirection() == "1>>" || command->get_redirection() == ">>") {
+            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND));
+        } else if (command->get_redirection() == "2>") {
+            command->set_stderr( open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC));
+        } else if (command->get_redirection() == "2>>") {
+            command->set_stderr(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND));
+        } else if(command->get_redirection() == "|") {
+            auto next_command = pipeline.at(i+1);
+            int pipe_fd[2];
+            pipe(pipe_fd);
+            command->set_pipe(pipe_fd);
+            next_command->set_pipe(pipe_fd);
+
+            command->set_stdout(pipe_fd[1]); // writer side
+            next_command->set_stdin(pipe_fd[0]); // reader side
+        }
+    }
+}
+
+void close_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+    for(const auto& command : pipeline)
+        command->close_io();
+}
+void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+    for (size_t i = 0; i<pipeline.size(); ++i) {
+        if(pipeline.at(i)->get_name() == "exit") wait_and_exit(pipeline.size());
+        execute(pipeline.at(i));
+    }
+}
+
 void run(const std::string &command_line) {
 
     try {
         auto saved_stdout = dup(STDOUT_FILENO);
         auto saved_stderr = dup(STDERR_FILENO);
-        for (const auto& c : get_commands(command_line)) {
-            c->execute();
-        }
+
+        const auto pipeline = get_commands(command_line);
+
+        setup_pipeline(pipeline);
+        run_pipeline(pipeline);
+        clean_up_pipeline(pipeline);
+        wait_for_commands(pipeline.size());
+        close_pipeline(pipeline);
+
         reset_stdio(STDERR_FILENO, saved_stderr);
         reset_stdio(STDOUT_FILENO, saved_stdout);
     } catch (const std::exception& e) {
