@@ -120,10 +120,10 @@ void spawn(std::shared_ptr<Command> command) {
 }
 
 void execute(std::shared_ptr<Command> command) {
-    if(BuiltinCommand::is_builtin(command->get_name()))
-        command->execute();
-    else
+    if(command->can_spawn())
         spawn(command);
+    else
+        command->execute();
 }
 
 void wait_for_commands(size_t n_proc) {

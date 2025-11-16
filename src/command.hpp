@@ -15,6 +15,7 @@ class Command {
 
         virtual void execute() = 0;
         virtual std::string where_is() = 0;
+        virtual bool can_spawn() = 0;
 
         std::string get_name() { return name; };
         std::string get_type() { return type; };

@@ -37,6 +37,9 @@ class BuiltinCommand : public Command {
         static std::vector<std::string> get_all_commands() {
             return {"cd", "echo", "exit", "pwd", "type"};
         }
+        bool can_spawn() {
+            return !(name == "cd" || name == "exit");
+        }
     private:
         static void cd(const  std::vector<std::string>& path = {}) {
             if (auto p = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && p))

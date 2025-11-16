@@ -39,6 +39,9 @@ class CustomCommand : public Command {
             }
             throw std::runtime_error("Command not found");   
         }
+        bool can_spawn() {
+            return true;
+        }
 };
 
 } // namespace shell
