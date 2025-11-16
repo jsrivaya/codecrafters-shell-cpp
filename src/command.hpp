@@ -4,6 +4,8 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <fstream>
+
 
 namespace shell {
 class Command {
@@ -61,6 +63,11 @@ class Command {
             argv.push_back(nullptr);
             return argv;
         }
+        void save_in_history() {
+            std::ofstream file(shell_history, std::ios::app);
+            file << name << std::endl;
+            file.close();
+        }
 
         const std::string name;
         const std::string type;
@@ -73,6 +80,7 @@ class Command {
         std::string filename{};
         int pipe_read = -1;
         int pipe_write = -1;
+        std::string shell_history = ".shell_history";
 };
 
 } // namespace shell

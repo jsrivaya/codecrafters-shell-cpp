@@ -4,7 +4,6 @@
 #include "command_builtin.hpp"
 #include <fcntl.h>
 #include <iostream>
-#include <sstream>
 #include <sys/wait.h>
 #include <utility>
 #include <vector>
@@ -149,13 +148,13 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     for (size_t i = 0; i<pipeline.size(); ++i) {
         auto command = pipeline.at(i);
         if (command->get_redirection() == "1>" || command->get_redirection() == ">") {
-            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC));
+            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 644));
         } else if (command->get_redirection() == "1>>" || command->get_redirection() == ">>") {
-            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND));
+            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, 644));
         } else if (command->get_redirection() == "2>") {
-            command->set_stderr( open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC));
+            command->set_stderr( open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 644));
         } else if (command->get_redirection() == "2>>") {
-            command->set_stderr(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND));
+            command->set_stderr(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, 644));
         } else if(command->get_redirection() == "|") {
             auto next_command = pipeline.at(i+1);
             int pipe_fd[2];

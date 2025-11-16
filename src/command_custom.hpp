@@ -16,6 +16,7 @@ class CustomCommand : public Command {
                 if (where_is() != "") {
                     dup_io();
                     close_io();
+                    save_in_history();
                     execvp(name.c_str(), get_argv().data());
                 }
             } catch (const std::runtime_error&) {

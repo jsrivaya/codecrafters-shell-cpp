@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 
 namespace shell {
 class BuiltinCommand : public Command {
@@ -20,9 +21,11 @@ class BuiltinCommand : public Command {
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
                     else if (name == "exit") exit(0);
+                    else if (name == "history") history(args);
                     else if (name == "pwd") pwd(args);
                     else if (name == "type") type(args);
                 }
+                save_in_history();
             } catch (const std::runtime_error&) {
                 std::cerr << name << ": not found" << std::endl;
             }
@@ -31,7 +34,7 @@ class BuiltinCommand : public Command {
             return name;
         }
         static bool is_builtin(const std::string& name) {
-            return name == "cd" || name == "echo" || name == "exit" || name == "pwd" || name == "type";
+            return name == "cd" || name == "echo" || name == "exit" || name == "history" || name == "pwd" || name == "type";
         }
         static std::vector<std::string> get_all_commands() {
             return {"cd", "echo", "exit", "pwd", "type"};
@@ -40,7 +43,7 @@ class BuiltinCommand : public Command {
             return !(name == "cd" || name == "exit");
         }
     private:
-        static void cd(const  std::vector<std::string>& path = {}) {
+        void cd(const  std::vector<std::string>& path = {}) {
             if (auto p = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && p))
                 std::filesystem::current_path(std::string{p});
             else if (path.size() > 1)
@@ -50,18 +53,26 @@ class BuiltinCommand : public Command {
             else
                 std::cerr << "cd: " + path.at(0) + ": No such file or directory" << std::endl;
         }
-        static void echo(const std::vector<std::string>& args = {}) {
+        void echo(const std::vector<std::string>& args = {}) {
             for (size_t i = 0; i < args.size(); ++i) {
                 std::cout << args[i];
                 if (i < args.size() - 1) std::cout << " ";
             }
             std::cout << std::endl;
         }
-        static void pwd(const std::vector<std::string>& args = {}) {
+        void history(const std::vector<std::string>& args = {}) {
+            std::ifstream file(shell_history);
+            std::string line;
+            while (std::getline(file, line)) {
+                std::cout << line << std::endl;
+            }
+            file.close();
+        }
+        void pwd(const std::vector<std::string>& args = {}) {
             if (!args.empty()) std::cerr << "pwd: : too many arguments" << std::endl;
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
-        static void type(const  std::vector<std::string>& args = {}) {
+        void type(const  std::vector<std::string>& args = {}) {
             for (const auto& a : args) {
                 if (BuiltinCommand::is_builtin(a)) {
                     std::cout << a << " is a shell builtin" << std::endl;
