@@ -2,11 +2,14 @@
 
 #include "command.hpp"
 #include "command_builtin.hpp"
+#include "history.hpp"
+
 #include <fcntl.h>
 #include <iostream>
 #include <sys/wait.h>
 #include <utility>
 #include <vector>
+#include <deque>
 
 namespace shell{
 
@@ -169,35 +172,39 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
 }
 
 void close_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+    close_pipes(pipeline);
+
+    wait_for_commands(pipeline.size());
+
     for(const auto& command : pipeline)
         command->close_io();
 }
 void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
-    for (size_t i = 0; i<pipeline.size(); ++i) {
-        if(pipeline.at(i)->get_name() == "exit") wait_and_exit(pipeline.size());
-        execute(pipeline.at(i));
+    for (const auto& command : pipeline) {
+        if(command->get_name() == "exit") {
+            History::getInstance().persist_history();
+            wait_and_exit(pipeline.size());
+        }
+        execute(command);
     }
 }
 
 void run(const std::string &command_line) {
 
+    auto saved_stdout = dup(STDOUT_FILENO);
+    auto saved_stderr = dup(STDERR_FILENO);
     try {
-        auto saved_stdout = dup(STDOUT_FILENO);
-        auto saved_stderr = dup(STDERR_FILENO);
-
         const auto pipeline = get_commands(command_line);
-
+        History::getInstance().log_command_line(command_line);
         setup_pipeline(pipeline);
         run_pipeline(pipeline);
-        close_pipes(pipeline);
-        wait_for_commands(pipeline.size());
         close_pipeline(pipeline);
 
-        reset_stdio(STDERR_FILENO, saved_stderr);
-        reset_stdio(STDOUT_FILENO, saved_stdout);
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
+        History::getInstance().persist_history();
     }
-
+    reset_stdio(STDERR_FILENO, saved_stderr);
+    reset_stdio(STDOUT_FILENO, saved_stdout);
 }
 } // namespace shell

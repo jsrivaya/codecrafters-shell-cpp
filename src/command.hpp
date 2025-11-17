@@ -23,6 +23,7 @@ class Command {
         std::string get_type() { return type; };
         std::string get_redirection() { return redirection; };
         std::string get_filename() { return filename; };
+
         void set_redirection(const std::string& op) { redirection = op; };
         void set_filename(const std::string& name) { filename = name; };
         void set_pipe_read(int fd) {
@@ -48,6 +49,14 @@ class Command {
         void set_stdout(const int fd = STDOUT_FILENO) { stdout = fd; };
         void set_stderr(const int fd = STDERR_FILENO) { stderr = fd; };
 
+        std::string get_commandline() {
+            auto line = name;
+            for (const auto& a : args) {
+                line += " " + a;
+            }
+            return line;
+        }
+
     protected:
         void dup_io() {
             dup2(stdin, STDIN_FILENO);
@@ -63,11 +72,6 @@ class Command {
             argv.push_back(nullptr);
             return argv;
         }
-        void save_in_history() {
-            std::ofstream file(shell_history, std::ios::app);
-            file << name << std::endl;
-            file.close();
-        }
 
         const std::string name;
         const std::string type;
@@ -80,7 +84,6 @@ class Command {
         std::string filename{};
         int pipe_read = -1;
         int pipe_write = -1;
-        std::string shell_history = ".shell_history";
 };
 
 } // namespace shell

@@ -67,7 +67,11 @@
         "stack": "cpp",
         "__tree": "cpp",
         "map": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "fstream": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "charconv": "cpp"
     },
     "C_Cpp.default.cppStandard": "c++23"
 }

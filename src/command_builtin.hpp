@@ -2,7 +2,9 @@
 
 #include "command.hpp"
 #include "command_custom.hpp"
+#include "history.hpp"
 
+#include <charconv>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -20,12 +22,11 @@ class BuiltinCommand : public Command {
                     close_io();
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
-                    else if (name == "exit") exit(0);
+                    else if (name == "exit") exit_shell(args);
                     else if (name == "history") history(args);
                     else if (name == "pwd") pwd(args);
                     else if (name == "type") type(args);
                 }
-                save_in_history();
             } catch (const std::runtime_error&) {
                 std::cerr << name << ": not found" << std::endl;
             }
@@ -60,13 +61,20 @@ class BuiltinCommand : public Command {
             }
             std::cout << std::endl;
         }
+        void exit_shell(const std::vector<std::string>& args = {}) {
+            exit(0);
+        }
         void history(const std::vector<std::string>& args = {}) {
-            std::ifstream file(shell_history);
-            std::string line;
-            while (std::getline(file, line)) {
-                std::cout << line << std::endl;
+            if(args.empty())
+                return History::getInstance().print_last();
+
+            int number;
+            auto result = std::from_chars(args.at(0).data(), args.at(0).data() + args.at(0).size(), number);
+            if (result.ec == std::errc()) {
+                History::getInstance().print_last(number);
+            } else {
+                std::cerr << "Invalid number" << std::endl;
             }
-            file.close();
         }
         void pwd(const std::vector<std::string>& args = {}) {
             if (!args.empty()) std::cerr << "pwd: : too many arguments" << std::endl;
