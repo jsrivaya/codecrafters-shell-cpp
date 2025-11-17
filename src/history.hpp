@@ -39,7 +39,7 @@ public:
 
         int original_index = cached_history.size() - number;
 
-        for (auto it = cached_history.rbegin(); it != cached_history.rend() && number > 0; ++it, ++original_index, --number) {
+        for (auto it = cached_history.end() - number; it != cached_history.end() && number > 0; ++it, ++original_index, --number) {
             std::cout << original_index << " " << it->data() << std::endl;
         }
     }
