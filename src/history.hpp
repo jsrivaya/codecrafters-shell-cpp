@@ -35,12 +35,12 @@ public:
             return;
         }
         if(number == 0)
-            number = cached_history.size() - 1;
+            number = cached_history.size();
 
         int original_index = cached_history.size() - number;
 
         for (auto it = cached_history.end() - number; it != cached_history.end() && number > 0; ++it, ++original_index, --number) {
-            std::cout << original_index << " " << it->data() << std::endl;
+            std::cout << "    " << original_index << "  " << it->data() << std::endl;
         }
     }
 protected:
