@@ -1,0 +1,85 @@
+#pragma once
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <chrono>
+#include <unistd.h>
+
+namespace shell {
+
+class Logger {
+public:
+    enum Level {
+        INFO,
+        DEBUG,
+        WARN,
+        ERROR
+    };
+
+    static Logger& getInstance() { 
+        static Logger instance;
+        return instance;
+    }
+
+    void enable(const Level l) { enabled = true; level = l;}
+    void disable() { enabled = false; }
+    void set_level(Level l) { level = l; }
+    std::string get_mode() {
+        switch (level) {
+            case Level::INFO:
+                return "INFO";
+                break;
+            case Level::DEBUG:
+                return "DEBUG";
+                break;
+            case Level::WARN:
+                return "WARN";
+                break;
+            case Level::ERROR:
+                return "ERROR";
+                break;
+            default:
+                break;
+        }
+    }
+
+    constexpr void log (const std::string& tag = "", const std::string& str = ""){
+        if (level >= Level::INFO) {
+            print(tag, str);
+        }
+    }
+
+    constexpr void warn (const std::string& tag = "", const std::string& str = ""){
+        if (level >= Level::WARN) {
+            print(tag, str);
+        }
+    }
+
+    constexpr void debug (const std::string& tag = "", const std::string& str = ""){
+        if (level >= Level::DEBUG) {
+            print(tag, str);
+        }
+    }
+
+    constexpr void error (const std::string& tag = "", const std::string& str = ""){
+        if (level >= Level::ERROR) {
+            print(tag, str);
+        }
+    }
+
+private:
+    Logger() = default;
+    Logger& operator=(const Logger) = delete;
+
+    bool enabled = false;
+    Level level = Level::INFO;
+
+    void print(const std::string& tag = "", const std::string& str = "") {
+        auto pid = std::to_string(getpid());
+        auto output = "[" + pid + "]\t" + get_mode() + ": " + tag + "\t" + str ;
+        std::cerr << output << std::endl;
+    }
+};
+
+} // namespace shell
