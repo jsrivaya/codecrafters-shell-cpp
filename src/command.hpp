@@ -1,11 +1,14 @@
 #pragma once
 
+#include "logger.hpp"
+
 #include <memory>
 #include <string>
 #include <unistd.h>
 #include <vector>
 #include <fstream>
 
+#include <iostream>
 
 namespace shell {
 class Command {
@@ -26,17 +29,10 @@ class Command {
 
         void set_redirection(const std::string& op) { redirection = op; };
         void set_filename(const std::string& name) { filename = name; };
-        void set_pipe_read(int fd) {
-            pipe_read = fd;
-        }
-        void set_pipe_write(int fd) {
-            pipe_write = fd;
-        }
-        void close_pipe() {
-            if (pipe_read >= 0) { close(pipe_read); }
-            if (pipe_write >= 0) { close(pipe_write); }
-        }
+
         void close_io() {
+            shell::Logger::getInstance().debug("execute", name);
+            shell::Logger::getInstance().debug("execute", "stdin [" + std::to_string(stdin) + "]; stdout [" + std::to_string(stdout) + "]; stderr [" + std::to_string(stderr) + "]");
             if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin);}
             if (stdout != STDOUT_FILENO && stdout >= 0) { close(stdout);}
             if (stderr != STDERR_FILENO && stderr >= 0) { close(stderr);}
@@ -45,6 +41,7 @@ class Command {
         int get_stdin() { return stdin; };
         int get_stdout() { return stdout; };
         int get_stderr() { return stderr; };
+
         void set_stdin(const int fd = STDIN_FILENO) { stdin = fd; };
         void set_stdout(const int fd = STDOUT_FILENO) { stdout = fd; };
         void set_stderr(const int fd = STDERR_FILENO) { stderr = fd; };
@@ -82,8 +79,6 @@ class Command {
 
         std::string redirection{};
         std::string filename{};
-        int pipe_read = -1;
-        int pipe_write = -1;
 };
 
 } // namespace shell

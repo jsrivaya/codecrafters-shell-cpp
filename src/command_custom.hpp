@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command.hpp"
+#include "logger.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -12,10 +13,12 @@ class CustomCommand : public Command {
     public:
         CustomCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "custom", args) { };
         void execute() {
+            shell::Logger::getInstance().debug("CustomCommand::execute", name);
             try {
                 if (where_is() != "") {
                     dup_io();
                     close_io();
+                    
                     execvp(name.c_str(), get_argv().data());
                 }
             } catch (const std::runtime_error&) {

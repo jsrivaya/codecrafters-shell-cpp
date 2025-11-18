@@ -3,6 +3,7 @@
 #include "command.hpp"
 #include "command_custom.hpp"
 #include "history.hpp"
+#include "logger.hpp"
 
 #include <charconv>
 #include <filesystem>
@@ -14,12 +15,12 @@ class BuiltinCommand : public Command {
     public:
         BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
         void execute() {
+            shell::Logger::getInstance().debug("CustomCommand::execute", name);
             try {
                 if (where_is() != "") {
                     // Builtin commands like 'cd' need to modify the shell's own state
                     // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
                     dup_io();
-                    close_io();
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
                     else if (name == "exit") exit_shell(args);
@@ -62,18 +63,24 @@ class BuiltinCommand : public Command {
             std::cout << std::endl;
         }
         void exit_shell(const std::vector<std::string>& args = {}) {
+            History::getInstance().persist_history();
             exit(0);
         }
         void history(const std::vector<std::string>& args = {}) {
-            if(args.empty())
-                return History::getInstance().print_last();
+            if(args.empty()) {
+                History::getInstance().print_last();
+                return;
+            }
 
+            auto size = args.size();
             int number;
             auto result = std::from_chars(args.at(0).data(), args.at(0).data() + args.at(0).size(), number);
             if (result.ec == std::errc()) {
                 History::getInstance().print_last(number);
-            } else {
-                std::cerr << "Invalid number" << std::endl;
+                return;
+            } else if (args.at(0) == "-r" && args.size() == 2) {
+                History::getInstance().load_history_from_file(args.at(1));
+                return;
             }
         }
         void pwd(const std::vector<std::string>& args = {}) {

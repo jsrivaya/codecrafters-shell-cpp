@@ -71,7 +71,9 @@
         "fstream": "cpp",
         "ranges": "cpp",
         "span": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "format": "cpp",
+        "bit": "cpp"
     },
     "C_Cpp.default.cppStandard": "c++23"
 }

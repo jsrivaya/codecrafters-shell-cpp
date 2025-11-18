@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logger.hpp"
+
 #include <algorithm>
 #include <deque>
 #include <iostream>
@@ -31,40 +33,52 @@ public:
     }
     void print_last(unsigned number = 0) {
         if (cached_history.empty()) {
-            std::cerr << "[print_last] History is empty" << std::endl;
             return;
         }
         if(number == 0)
             number = cached_history.size();
 
-        int original_index = cached_history.size() - number;
+        int original_index = cached_history.size() - number + 1;
 
         for (auto it = cached_history.end() - number; it != cached_history.end() && number > 0; ++it, ++original_index, --number) {
             std::cout << "    " << original_index << "  " << it->data() << std::endl;
         }
     }
-protected:
-    std::string get_path() {
-        auto home = std::getenv("HOME");
-        std::string history_path = home ? home : "~";
-        return history_path + "/" + name;
-    }
-    void load_history_from_file() {
-        std::ifstream file(get_path());
+    void load_history_from_file(const std::string& requested_file = "") {
+
+        std::ifstream file;
+        if(requested_file.empty() && cached_history.empty()) {
+            file = std::ifstream(persistent_path);
+        } else if (!requested_file.empty()) {
+            file = std::ifstream(requested_file);
+        }
         if (!file) return;
 
         std::string line;
         while (std::getline(file, line)) {
-            cached_history.emplace_back(line);
+            if(!line.empty()) cached_history.emplace_back(line);
         }
     }
+
+protected:
+    std::string get_path() {
+        return persistent_path;
+    }
+
 private:
-    History() { load_history_from_file(); };
+    History() {
+        if (const char* env = std::getenv("HISTFILE")) {
+            persistent_path = std::string{env};
+        } else {
+            persistent_path = "~/.shell_history";
+        }
+        load_history_from_file();
+    };
     History(const History&) = delete;
     History& operator=(const History&) = delete;
 
     std::deque<std::string> cached_history;
-    std::string name = ".shell_history";
+    std::string persistent_path;
 
     std::mutex mtx;
 };
