@@ -87,6 +87,8 @@ class BuiltinCommand : public Command {
                 History::getInstance().print_last(number);
             } else if (args.at(0) == "-r" && args.size() == 2) {
                 History::getInstance().load_history_from_file(args.at(1));
+            }   else if (args.at(0) == "-w" && args.size() == 2) {
+                History::getInstance().persist_history(args.at(1));
             }
         }
         void pwd(const std::vector<std::string>& args = {}) {

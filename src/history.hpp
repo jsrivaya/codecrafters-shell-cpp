@@ -21,14 +21,19 @@ public:
 
         cached_history.emplace_back(command);
     }
-    void persist_history() {
+    void persist_history(const std::string& history_file = "") {
         std::lock_guard<std::mutex> lock(mtx);
+        std::ofstream file;
 
-        std::ofstream file(get_path());
-        while(!cached_history.empty()) {
-            file << (cached_history.front()) << std::endl;
-            cached_history.pop_front();
+        if (history_file.empty())
+            file = std::ofstream(get_path());
+        else
+            file =std::ofstream(history_file);
+
+        for (const auto& cmd : cached_history) {
+            file << cmd << std::endl;
         }
+
         file.close();
     }
     void print_last(unsigned number = 0) {
