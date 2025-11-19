@@ -4,6 +4,7 @@
 #include "command_builtin.hpp"
 #include "history.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 
 #include <fcntl.h>
 #include <iostream>
@@ -16,7 +17,6 @@
 
 namespace shell{
 
-    static int n_proc = 0;
 // std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) {
 // return: { arg0, arg1, arg2, arg3 }
 // (e.g {cat, /tmp/file.txt, >, myfile.txt})
@@ -83,11 +83,6 @@ bool is_delimeter(const std::string& name) {
             name == "2>" || name == "2>>" || name == "|" || name == "&|";
 }
 
-void reset_stdio(int io_fileno, int saved_stdio) {
-    dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
-    close(saved_stdio); // Clean up
-}
-
 std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_line) {
     std::vector<std::shared_ptr<Command>> commands{};
     std::vector<std::string> args{};
@@ -117,38 +112,47 @@ std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_li
     return commands;
 }
 
-void spawn(std::shared_ptr<Command> command) {
+pid_t spawn(std::shared_ptr<Command> command) {
     pid_t pid = fork();
     if (pid == 0) {
         command->execute();
         std::exit(1);
     }
-    ++n_proc;
+    return pid;
 }
 
-void execute(std::shared_ptr<Command> command) {
-    shell::Logger::getInstance().debug("execute", command->get_name());
+pid_t execute(std::shared_ptr<Command> command) {
+    shell::Logger::getInstance().debug("execute()", command->get_name());
+    pid_t pid = -1;
     if(BuiltinCommand::is_builtin(command->get_name())) {
         command->execute(); // execute in the shell process
+        pid = getpid();
     } else{
-        spawn(command); // execute in child process
+        pid = spawn(command); // execute in child process
+        command->close_io();
     }
-
-    // parent: close up pipe descriptors if open
-    command->close_io();
+    return pid;
 }
 
 void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     for (size_t i = 0; i<pipeline.size(); ++i) {
         auto command = pipeline.at(i);
         if (command->get_redirection() == "1>" || command->get_redirection() == ">") {
-            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 644));
+            command->set_stdout(
+                open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+            );
         } else if (command->get_redirection() == "1>>" || command->get_redirection() == ">>") {
-            command->set_stdout(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, 644));
+            command->set_stdout(
+                open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+            );
         } else if (command->get_redirection() == "2>") {
-            command->set_stderr( open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 644));
+            command->set_stderr(
+                open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+            );
         } else if (command->get_redirection() == "2>>") {
-            command->set_stderr(open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, 644));
+            command->set_stderr(
+                open(command->get_filename().c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+            );
         } else if(command->get_redirection() == "|") {
             auto next_command = pipeline.at(i+1);
             int pipe_fd[2];
@@ -160,54 +164,35 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     }
 }
 
-void wait_for_commands(/*size_t n_proc*/) {
-    shell::Logger::getInstance().debug("wait_for_commands");
-    for (size_t i = 0; i<n_proc; ++i) {
-        wait(nullptr);
-    }
-    n_proc = 0;
-}
-
-void close_pipes(std::vector<std::shared_ptr<Command>> pipeline) {
-    shell::Logger::getInstance().debug("close_pipes", std::to_string(pipeline.size()));
-    for(const auto& command : pipeline) {
-        command->close_io();
-    }
-}
-
-void close_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
-    shell::Logger::getInstance().debug("close_pipeline", std::to_string(pipeline.size()));
-    close_pipes(pipeline);
-
-    wait_for_commands(/*pipeline.size()*/);
-}
-
-void wait_and_exit(/*size_t n_proc*/) {
-    wait_for_commands(/*n_proc*/);
-    exit(0);
-}
-
 void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
-    std::vector<std::shared_ptr<Command>> builtin_commands{};
-    for (const auto& command : pipeline) {
-        if(BuiltinCommand::is_builtin(command->get_name())) {
-            builtin_commands.emplace_back(command);
-            continue;
-        }
-        // if(command->get_name() == "exit") {
-        //     History::getInstance().persist_history();
-        //     wait_and_exit(/*pipeline.size()*/);
-        // }
-        execute(command);
+    std::vector<pid_t> pids;
+    for (auto& cmd : pipeline) {
+        pid_t pid = execute(cmd);
+        pids.push_back(pid);
     }
 
-    for (const auto& command : builtin_commands)
-        execute(command);
+    // Now wait for all children
+    for (pid_t pid : pids) {
+        int status;
+        if (pid > 0) {  // Only parent waits
+            waitpid(pid, &status, 0);
+        }
+    }
 
+    // After launching all children and calling waitpid() for each:
+    for (auto& cmd : pipeline) {
+        cmd->close_io();  // Now safe to close pipe FDs
+    }
+}
+
+void reset_stdio(int io_fileno, int saved_stdio) {
+    dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
+    close(saved_stdio); // Clean up
 }
 
 void run(const std::string &command_line) {
 
+    auto saved_stdin = dup(STDIN_FILENO);
     auto saved_stdout = dup(STDOUT_FILENO);
     auto saved_stderr = dup(STDERR_FILENO);
 
@@ -216,7 +201,6 @@ void run(const std::string &command_line) {
         const auto pipeline = get_commands(command_line);
         setup_pipeline(pipeline);
         run_pipeline(pipeline);
-        close_pipeline(pipeline);
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         History::getInstance().persist_history();
@@ -224,5 +208,6 @@ void run(const std::string &command_line) {
 
     reset_stdio(STDERR_FILENO, saved_stderr);
     reset_stdio(STDOUT_FILENO, saved_stdout);
+    reset_stdio(STDIN_FILENO, saved_stdin);
 }
 } // namespace shell

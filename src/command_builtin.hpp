@@ -15,18 +15,26 @@ class BuiltinCommand : public Command {
     public:
         BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
         void execute() {
-            shell::Logger::getInstance().debug("CustomCommand::execute", name);
+            shell::Logger::getInstance().debug("BuiltinCommand::execute", name);
             try {
                 if (where_is() != "") {
                     // Builtin commands like 'cd' need to modify the shell's own state
                     // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
+                    auto saved_stdin = dup(STDIN_FILENO);
+                    auto saved_stdout = dup(STDOUT_FILENO);
+                    auto saved_stderr = dup(STDERR_FILENO);
                     dup_io();
+                    close_io();
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
                     else if (name == "exit") exit_shell(args);
                     else if (name == "history") history(args);
                     else if (name == "pwd") pwd(args);
                     else if (name == "type") type(args);
+
+                    reset_stdio(STDIN_FILENO, saved_stdin);
+                    reset_stdio(STDOUT_FILENO, saved_stdout);
+                    reset_stdio(STDERR_FILENO, saved_stderr);
                 }
             } catch (const std::runtime_error&) {
                 std::cerr << name << ": not found" << std::endl;

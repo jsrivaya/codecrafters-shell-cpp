@@ -7,6 +7,14 @@
 #include <unistd.h>
 #include <set>
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <libproc.h>
+#include <sys/proc_info.h>
+#endif   
+
+#include <string>
+#include <map>
+
 namespace shell {
     // custom file descriptor deleter
     // struct fd_deleter {
@@ -60,31 +68,39 @@ bool is_executable(const std::filesystem::path& p) {
            access(p.c_str(), X_OK) == 0;
 }
 
-// void load_commands(const std::string& path = "PATH") {
-//     if(const auto p = std::getenv(path.c_str()); p) {
-//         std::string path_env{p};
-//         for(size_t start = 0; start < path_env.size();) {
-//             size_t end = path_env.find_first_of(":", start);
-//             if (end == std::string::npos) end = path_env.size();
+#if defined(__APPLE__) && defined(__MACH__)
 
-//             // std::filesystem::path p = path_env.substr(start, end - start);
-//             for (const auto& entry : std::filesystem::directory_iterator(path_env.substr(start, end - start))) {
-//                if(is_executable(entry)) {
-//                 commands_store.emplace(entry);
-//                }
-//             }
-//             start = end + 1;
-//         }
-//     }  
-// }
+std::map <int, std::string> fdtype_to_string {
+    { PROX_FDTYPE_ATALK, "PROX_FDTYPE_ATALK" },      // (AppleTalk)
+    { PROX_FDTYPE_VNODE, "PROX_FDTYPE_VNODE"},       // (Files)
+    { PROX_FDTYPE_SOCKET, "PROX_FDTYPE_SOCKET"},     // (Sockets)
+    { PROX_FDTYPE_PSHM, "PROX_FDTYPE_PSHM"},         // (POSIX Shared Memory)
+    { PROX_FDTYPE_PSEM, "PROX_FDTYPE_PSEM"},         // (POSIX Semaphores)
+    { PROX_FDTYPE_KQUEUE, "PROX_FDTYPE_KQUEUE"},     // (kqueue)
+    { PROX_FDTYPE_PIPE, "PROX_FDTYPE_PIPE"},         // (Pipes)
+    { PROX_FDTYPE_FSEVENTS, "PROX_FDTYPE_FSEVENTS"}, // (File System Events)
+    { PROX_FDTYPE_NETPOLICY, "PROX_FDTYPE_NETPOLICY"} // (Network Policy)
+};
 
-// std::vector<std::string> find_matches(const std::string& pattern) {
-//     std::vector<std::string> matches{};
-//     auto it = std::copy_if(commands_store.begin(), commands_store.end(), std::back_inserter(matches),
-//         [pattern](const std::string& s) {
-//             return s.rfind(pattern, 0) == 0;
-//     });
-//     return matches;
-// }
+void list_fds(pid_t pid) {
+    // Get buffer size needed
+    int bufsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, NULL, 0);
+    if (bufsize <= 0) return;
+
+    // Allocate buffer
+    auto fds = std::make_unique<proc_fdinfo[]>(bufsize / PROC_PIDLISTFD_SIZE);
+
+    // Get file descriptor info
+    int n = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, fds.get(), bufsize);
+    if (n <= 0) return;
+
+    n /= PROC_PIDLISTFD_SIZE;
+
+    // Print each fd
+    for (int i = 0; i < n; ++i) {
+        std::cerr << "FD " << fds[i].proc_fd << " type: " << fdtype_to_string[fds[i].proc_fdtype] << std::endl;
+    }
+}
+#endif // defined(__APPLE__) && defined(__MACH__)
 
 } // namespace shell
