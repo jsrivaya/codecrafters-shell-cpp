@@ -77,10 +77,8 @@ class BuiltinCommand : public Command {
             auto result = std::from_chars(args.at(0).data(), args.at(0).data() + args.at(0).size(), number);
             if (result.ec == std::errc()) {
                 History::getInstance().print_last(number);
-                return;
             } else if (args.at(0) == "-r" && args.size() == 2) {
                 History::getInstance().load_history_from_file(args.at(1));
-                return;
             }
         }
         void pwd(const std::vector<std::string>& args = {}) {
