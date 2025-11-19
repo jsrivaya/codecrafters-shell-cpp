@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <mutex>
 #include <string>
 #include <chrono>
 #include <unistd.h>
@@ -40,6 +41,7 @@ public:
                 return "ERROR";
                 break;
             default:
+                return "INFO";
                 break;
         }
     }
@@ -75,7 +77,9 @@ private:
     bool enabled = false;
     Level level = Level::INFO;
 
+    std::mutex print_mtx;
     void print(const std::string& tag = "", const std::string& str = "") {
+        std::lock_guard<std::mutex> lock(print_mtx);
         auto pid = std::to_string(getpid());
         auto output = "[" + pid + "]\t" + get_mode() + ": " + tag + "\t" + str ;
         std::cerr << output << std::endl;
