@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
 #include <mutex>
 #include <string>
 #include <chrono>
@@ -71,7 +70,11 @@ public:
     }
 
 private:
-    Logger() = default;
+    Logger() {
+        // // Flush after every std::cout / std:cerr
+        std::cout << std::unitbuf;
+        std::cerr << std::unitbuf;
+    };
     Logger& operator=(const Logger) = delete;
 
     bool enabled = false;

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <unordered_set>
 #include <ranges>
+
 namespace shell {
 
 class History {

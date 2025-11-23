@@ -2,13 +2,10 @@
 
 #include "logger.hpp"
 
-#include <memory>
+#include <iostream>
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <fstream>
-
-#include <iostream>
 
 namespace shell {
 class Command {

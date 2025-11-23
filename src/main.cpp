@@ -1,19 +1,16 @@
 #include "shell.hpp"
 #include "logger.hpp"
 
-#include <iostream>
-
-
 int main() {
-  // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
 
+  // 1. Initialize logger
   shell::Logger::getInstance().enable(shell::Logger::Level::INFO);
 
+  // 2. Initialize shell
   shell::init();
-  
+
   do {
+    // 3. Read command line and Run shell
     shell::run(shell::read_line());
 
   } while(true);

@@ -3,9 +3,8 @@
 
 #include <dirent.h>
 #include <string>
-#include <readline/readline.h>
 #include <readline/history.h>
-
+#include <readline/readline.h>
 #include <vector>
 
 namespace shell {
