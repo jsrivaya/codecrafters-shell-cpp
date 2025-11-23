@@ -1,8 +1,6 @@
 #pragma once
 
 #include "logger.hpp"
-
-#include <iostream>
 #include <string>
 #include <unistd.h>
 #include <vector>

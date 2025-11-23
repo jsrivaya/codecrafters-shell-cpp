@@ -27,17 +27,17 @@ public:
     void set_level(Level l) { level = l; }
     std::string get_mode() {
         switch (level) {
+            case Level::ERROR:
+                return "ERROR";
+                break;
             case Level::INFO:
                 return "INFO";
-                break;
-            case Level::DEBUG:
-                return "DEBUG";
                 break;
             case Level::WARN:
                 return "WARN";
                 break;
-            case Level::ERROR:
-                return "ERROR";
+            case Level::DEBUG:
+                return "DEBUG";
                 break;
             default:
                 return "INFO";

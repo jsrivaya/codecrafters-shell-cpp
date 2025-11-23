@@ -46,14 +46,12 @@ public:
         std::string line{};
         std::ifstream file_read(path);
         while (file_read.is_open() && std::getline(file_read, line)) {
-            // shell::Logger::getInstance().log("read from file: " + line);
             file_content.emplace_back(line);
         }
 
         int itr_file = file_content.size() > 0 ?  file_content.size() - 1 : 0; // we start reading from the end of file
         int itr_cache = 0; // we start reading from the begining of cache
         int itr_to_append = 0;
-        // looking for the longest cache list that matches file history EOF
         while(!file_content.empty() && itr_file >=0) {
             if(cached_history.at(itr_cache) == file_content.at(itr_file)) {
                 auto itr_file_tmp = itr_file;

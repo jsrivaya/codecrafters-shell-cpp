@@ -9,7 +9,6 @@
 #include "utils.hpp"
 
 #include <fcntl.h>
-#include <iostream>
 #include <sys/wait.h>
 #include <vector>
 
@@ -139,7 +138,7 @@ void run(const std::string &command_line) {
         setup_pipeline(pipeline);
         run_pipeline(pipeline);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        Logger::getInstance().error(e.what());
         History::getInstance().persist_history();
     }
 
