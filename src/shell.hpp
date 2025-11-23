@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command.hpp"
+#include "command_line.hpp"
 #include "command_builtin.hpp"
 #include "history.hpp"
 #include "logger.hpp"
@@ -17,6 +18,10 @@
 
 namespace shell{
 
+void init () {
+    // initialize readline library
+    rl_init();
+}
 // std::pair<std::string, std::vector<std::string>> get_args(const std::string& s) {
 // return: { arg0, arg1, arg2, arg3 }
 // (e.g {cat, /tmp/file.txt, >, myfile.txt})

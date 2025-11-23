@@ -1,6 +1,5 @@
 #include "shell.hpp"
 #include "logger.hpp"
-#include "command_line.hpp"
 
 #include <iostream>
 
@@ -11,8 +10,9 @@ int main() {
   std::cerr << std::unitbuf;
 
   shell::Logger::getInstance().enable(shell::Logger::Level::INFO);
-  shell::rl_init();
 
+  shell::init();
+  
   do {
     shell::run(shell::read_line());
 
