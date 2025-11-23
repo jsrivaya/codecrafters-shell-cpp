@@ -13,14 +13,19 @@
 
 namespace shell {
 
-bool is_executable(const std::filesystem::path& p) {
+static void reset_stdio(int io_fileno, int saved_stdio) {
+    dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
+    close(saved_stdio); // Clean up
+}
+
+static bool is_executable(const std::filesystem::path& p) {
     return std::filesystem::is_regular_file(p) && 
            access(p.c_str(), X_OK) == 0;
 }
 
 #if defined(__APPLE__) && defined(__MACH__)
 
-std::map <int, std::string> fdtype_to_string {
+static std::map <int, std::string> fdtype_to_string {
     { PROX_FDTYPE_ATALK, "PROX_FDTYPE_ATALK" },      // (AppleTalk)
     { PROX_FDTYPE_VNODE, "PROX_FDTYPE_VNODE"},       // (Files)
     { PROX_FDTYPE_SOCKET, "PROX_FDTYPE_SOCKET"},     // (Sockets)
@@ -32,7 +37,7 @@ std::map <int, std::string> fdtype_to_string {
     { PROX_FDTYPE_NETPOLICY, "PROX_FDTYPE_NETPOLICY"} // (Network Policy)
 };
 
-void list_fds(pid_t pid) {
+static void list_fds(pid_t pid) {
     // Get buffer size needed
     int bufsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, NULL, 0);
     if (bufsize <= 0) return;

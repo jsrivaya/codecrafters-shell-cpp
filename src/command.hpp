@@ -62,10 +62,6 @@ class Command {
             dup2(stdout, STDOUT_FILENO);
             dup2(stderr, STDERR_FILENO);
         }
-        void reset_stdio(int io_fileno, int saved_stdio) {
-            dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
-            close(saved_stdio); // Clean up
-        }
         std::vector<char*> get_argv() {
             std::vector<char*> argv;
             argv.emplace_back(const_cast<char*>(name.c_str()));

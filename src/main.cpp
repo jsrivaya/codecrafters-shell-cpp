@@ -1,5 +1,5 @@
-#include "shell.hpp"
 #include "logger.hpp"
+#include "shell.hpp"
 
 int main() {
 

@@ -121,11 +121,6 @@ void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     }
 }
 
-void reset_stdio(int io_fileno, int saved_stdio) {
-    dup2(saved_stdio, io_fileno); // Restore the saved fd to stdout
-    close(saved_stdio); // Clean up
-}
-
 void run(const std::string &command_line) {
 
     auto saved_stdin = dup(STDIN_FILENO);

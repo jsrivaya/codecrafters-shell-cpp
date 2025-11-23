@@ -4,6 +4,7 @@
 #include "command_custom.hpp"
 #include "history.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 
 #include <charconv>
 #include <filesystem>

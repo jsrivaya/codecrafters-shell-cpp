@@ -2,6 +2,7 @@
 
 #include "command.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 
 #include <filesystem>
 #include <iostream>
