@@ -1,6 +1,8 @@
 #pragma once
 
 #include "logger.hpp"
+#include "utils.hpp"
+
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -57,12 +59,24 @@ class Command {
         }
 
     protected:
-        void dup_io() {
+        void setup_io () {
+            saved_stdin = dup(STDIN_FILENO);
+            saved_stdout = dup(STDOUT_FILENO);
+            saved_stderr = dup(STDERR_FILENO);
+            dup_io();
+            close_io();
+        }
+        void reset_io () {
+            reset_stdio(STDIN_FILENO, saved_stdin);
+            reset_stdio(STDOUT_FILENO, saved_stdout);
+            reset_stdio(STDERR_FILENO, saved_stderr);
+        }
+        void dup_io () {
             dup2(stdin, STDIN_FILENO);
             dup2(stdout, STDOUT_FILENO);
             dup2(stderr, STDERR_FILENO);
         }
-        std::vector<char*> get_argv() {
+        std::vector<char*> get_argv () {
             std::vector<char*> argv;
             argv.emplace_back(const_cast<char*>(name.c_str()));
             for (const auto& a : args)
@@ -78,6 +92,9 @@ class Command {
         int stdin;
         int stdout;
         int stderr;
+        int saved_stdin;
+        int saved_stdout;
+        int saved_stderr;
         int pipe_read;
         int pipe_write;
 

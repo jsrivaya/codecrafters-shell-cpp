@@ -4,7 +4,6 @@
 #include "command_custom.hpp"
 #include "history.hpp"
 #include "logger.hpp"
-#include "utils.hpp"
 
 #include <charconv>
 #include <filesystem>
@@ -21,11 +20,8 @@ class BuiltinCommand : public Command {
                 if (where_is() != "") {
                     // Builtin commands like 'cd' need to modify the shell's own state
                     // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
-                    auto saved_stdin = dup(STDIN_FILENO);
-                    auto saved_stdout = dup(STDOUT_FILENO);
-                    auto saved_stderr = dup(STDERR_FILENO);
-                    dup_io();
-                    close_io();
+                    setup_io();
+
                     if (name == "cd") cd(args);
                     else if (name == "echo") echo(args);
                     else if (name == "exit") exit_shell(args);
@@ -33,9 +29,7 @@ class BuiltinCommand : public Command {
                     else if (name == "pwd") pwd(args);
                     else if (name == "type") type(args);
 
-                    reset_stdio(STDIN_FILENO, saved_stdin);
-                    reset_stdio(STDOUT_FILENO, saved_stdout);
-                    reset_stdio(STDERR_FILENO, saved_stderr);
+                    reset_io();
                 }
             } catch (const std::runtime_error&) {
                 std::cerr << name << ": not found" << std::endl;

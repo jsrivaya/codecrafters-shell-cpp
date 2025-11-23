@@ -2,7 +2,6 @@
 
 #include "command.hpp"
 #include "logger.hpp"
-#include "utils.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -17,18 +16,11 @@ class CustomCommand : public Command {
             shell::Logger::getInstance().debug("CustomCommand::execute", name);
             try {
                 if (where_is() != "") {
-                    auto saved_stdin = dup(STDIN_FILENO);
-                    auto saved_stdout = dup(STDOUT_FILENO);
-                    auto saved_stderr = dup(STDERR_FILENO);
-                    auto pid = getpid();
-                    dup_io();
-                    close_io();
+                    setup_io();
 
                     execvp(name.c_str(), get_argv().data());
 
-                    reset_stdio(STDIN_FILENO, saved_stdin);
-                    reset_stdio(STDOUT_FILENO, saved_stdout);
-                    reset_stdio(STDERR_FILENO, saved_stderr);
+                    reset_io();
                 }
             } catch (const std::runtime_error&) {
                 std::cerr << name << ": not found" << std::endl;
