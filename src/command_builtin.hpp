@@ -44,9 +44,6 @@ class BuiltinCommand : public Command {
         static std::vector<std::string> get_all_commands() {
             return {"cd", "echo", "exit", "pwd", "type"};
         }
-        bool can_spawn() {
-            return !(name == "cd" || name == "exit");
-        }
     private:
         void cd(const  std::vector<std::string>& path = {}) {
             if (auto p = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && p))
@@ -67,6 +64,7 @@ class BuiltinCommand : public Command {
         }
         void exit_shell(const std::vector<std::string>& args = {}) {
             History::getInstance().persist_history();
+            reset_io();
             exit(0);
         }
         void history(const std::vector<std::string>& args = {}) {

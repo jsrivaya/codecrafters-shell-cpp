@@ -39,7 +39,7 @@ public:
     }
     void append_history_to_file(const std::string& history_file = "") {  
         std::lock_guard<std::mutex> lock(mtx);
-        auto path = history_file.empty() ? get_path() : history_file;   
+        const auto& path = history_file.empty() ? get_path() : history_file;
 
         // load file in memory
         std::deque<std::string> file_content{};

@@ -12,12 +12,11 @@ class Command {
     public:
         Command(const std::string& name, const std::string& type, const std::vector<std::string>&  args = {},
             int stdin = STDIN_FILENO, int stdout = STDOUT_FILENO, int stderr = STDERR_FILENO) :
-            name(name), type(type), args(args), stdin(stdin), stdout(stdout), stderr(stderr), pipe_read(-1), pipe_write(-1) {};
+            name(name), type(type), args(args), stdin(stdin), stdout(stdout), stderr(stderr) {};
         static std::shared_ptr<Command> get_command(const std::vector<std::string>&  args = {});
 
         virtual void execute() = 0;
         virtual std::string where_is() = 0;
-        virtual bool can_spawn() = 0;
 
         std::string get_name() { return name; };
         std::string get_type() { return type; };
@@ -28,35 +27,23 @@ class Command {
         void set_filename(const std::string& name) { filename = name; };
 
         void close_io() {
-            if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin); stdin = STDIN_FILENO;}
+            if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin); stdin = STDIN_FILENO; }
             if (stdout != STDOUT_FILENO && stdout >= 0) { close(stdout);  stdout = STDOUT_FILENO; }
             if (stderr != STDERR_FILENO && stderr >= 0) { close(stderr);  stderr = STDERR_FILENO; }
         }
 
-        int get_stdin() { return stdin; };
-        int get_stdout() { return stdout; };
-        int get_stderr() { return stderr; };
-
         void set_stdin(const int fd = STDIN_FILENO) { 
-            if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin);}
+            if (stdin != STDIN_FILENO && stdin >= 0) { close(stdin); }
             stdin = fd;
         };
         void set_stdout(const int fd = STDOUT_FILENO) {
-            if (stdout != STDOUT_FILENO && stdout >= 0) { close(stdout);}
+            if (stdout != STDOUT_FILENO && stdout >= 0) { close(stdout); }
             stdout = fd;
         };
         void set_stderr(const int fd = STDERR_FILENO) {
             if (stderr != STDERR_FILENO && stderr >= 0) { close(stderr); }
             stderr = fd;
         };
-
-        std::string get_commandline() {
-            auto line = name;
-            for (const auto& a : args) {
-                line += " " + a;
-            }
-            return line;
-        }
 
     protected:
         void setup_io () {
@@ -89,14 +76,13 @@ class Command {
         const std::string name;
         const std::string type;
         const std::vector<std::string> args;
+
         int stdin;
         int stdout;
         int stderr;
         int saved_stdin;
         int saved_stdout;
         int saved_stderr;
-        int pipe_read;
-        int pipe_write;
 
         std::string redirection{};
         std::string filename{};

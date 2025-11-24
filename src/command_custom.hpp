@@ -40,10 +40,7 @@ class CustomCommand : public Command {
                     start = end + 1;
                 }
             }
-            throw std::runtime_error("Command not found");   
-        }
-        bool can_spawn() {
-            return true;
+            throw std::runtime_error("not found");
         }
 };
 

@@ -10,12 +10,12 @@
 namespace shell {
 
 /* A static variable for holding the line. */
-static char *line_read = (char *)NULL;
+static char * line_read = (char *) NULL;
 
 std::vector<std::string> load_paths() {
     std::vector<std::string> directories{};
 
-    if(const auto p = std::getenv("PATH"); p) {  
+    if(const auto& p = std::getenv("PATH"); p) {
         std::string path_env{p};
         for(size_t start = 0; start < path_env.size();) {
             size_t end = path_env.find_first_of(":", start);
@@ -28,7 +28,7 @@ std::vector<std::string> load_paths() {
     return directories;
 }
 
-char *path_files_generator(const char *text, int state) {
+char * path_files_generator(const char *text, int state) {
     static std::vector<std::string> paths{};
     static size_t dir_index;
     static DIR *dir;
@@ -54,14 +54,14 @@ char *path_files_generator(const char *text, int state) {
     while (dir && dir_index < paths.size()) {
         if (entry = readdir(dir); entry) {
             if (strncmp(entry->d_name, text, strlen(text)) == 0) {
-            return strdup(entry->d_name); // Return the FIRST match found on this call
+                return strdup(entry->d_name); // Return the FIRST match found on this call
             }
         } else { // end of files in dir; load next dir
             if (dir) { closedir(dir); dir = NULL; }
 
             for (dir_index+=1; !dir && dir_index < paths.size(); ++dir_index) {
-            dir = opendir(paths.at(dir_index).c_str());
-            if (dir) break;
+                dir = opendir(paths.at(dir_index).c_str());
+                if (dir) break;
             }
         }
     }
@@ -74,7 +74,7 @@ char *path_files_generator(const char *text, int state) {
     return NULL;
 }
 
-char **path_files_completion(const char *text, int start, int end) {
+char ** path_files_completion(const char * text, int start, int end) {
     // Prevent Readline from doing default filename completion
     rl_attempted_completion_over = 1;
 
