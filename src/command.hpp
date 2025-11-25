@@ -12,16 +12,17 @@ class Command {
     public:
         Command(const std::string& name, const std::string& type, const std::vector<std::string>&  args = {},
             int stdin = STDIN_FILENO, int stdout = STDOUT_FILENO, int stderr = STDERR_FILENO) :
-            name(name), type(type), args(args), stdin(stdin), stdout(stdout), stderr(stderr) {};
+            name(name), type(type), args(args), stdin(stdin), stdout(stdout), stderr(stderr),
+            saved_stdin(stdin), saved_stdout(stdout), saved_stderr(stderr) { };
         static std::shared_ptr<Command> get_command(const std::vector<std::string>&  args = {});
 
         virtual void execute() = 0;
         virtual std::string where_is() = 0;
 
-        std::string get_name() { return name; };
-        std::string get_type() { return type; };
-        std::string get_redirection() { return redirection; };
-        std::string get_filename() { return filename; };
+        const std::string& get_name() { return name; };
+        const std::string& get_type() { return type; };
+        const std::string& get_redirection() { return redirection; };
+        const std::string& get_filename() { return filename; };
 
         void set_redirection(const std::string& op) { redirection = op; };
         void set_filename(const std::string& name) { filename = name; };
@@ -65,11 +66,13 @@ class Command {
         }
         std::vector<char*> get_argv () {
             std::vector<char*> argv;
-            argv.emplace_back(const_cast<char*>(name.c_str()));
-            for (const auto& a : args)
-                argv.emplace_back(const_cast<char*>(a.c_str()));
 
+            argv.emplace_back(const_cast<char*>(name.c_str()));
+            std::transform(args.begin(), args.end(), std::back_inserter(argv), [](const std::string& a) {
+                return const_cast<char*>(a.c_str());
+            });
             argv.push_back(nullptr);
+
             return argv;
         }
 

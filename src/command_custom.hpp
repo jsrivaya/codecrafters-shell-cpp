@@ -11,8 +11,8 @@
 namespace shell {
 class CustomCommand : public Command {
     public:
-        CustomCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "custom", args) { };
-        void execute() {
+        explicit CustomCommand(const std::string& name = "custom", const std::vector<std::string>&  args = {}) : Command(name, "custom", args) { };
+        void execute() override {
             shell::Logger::getInstance().debug("CustomCommand::execute", name);
             try {
                 if (where_is() != "") {
@@ -26,16 +26,16 @@ class CustomCommand : public Command {
                 std::cerr << name << ": not found" << std::endl;
             }
         }
-        std::string where_is() {
+        std::string where_is() override {
             if(const auto p = std::getenv("PATH"); p) {
                 std::string path_env{p};
                 for(size_t start = 0; start < path_env.size();) {
                     size_t end = path_env.find_first_of(":", start);
                     if (end == std::string::npos) end = path_env.size();
 
-                    std::filesystem::path p = path_env.substr(start, end - start) + "/" + name;
-                    if (std::filesystem::exists(p) && access(p.c_str(), X_OK) == 0) {
-                        return p.string();
+                    std::filesystem::path path = path_env.substr(start, end - start) + "/" + name;
+                    if (std::filesystem::exists(path) && access(path.c_str(), X_OK) == 0) {
+                        return path.string();
                     }
                     start = end + 1;
                 }

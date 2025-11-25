@@ -91,7 +91,7 @@ pid_t execute(std::shared_ptr<Command> command) {
  * 
  * @param pipeline the list of Commands to prepare for execution
  */
-void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+void setup_pipeline(const std::vector<std::shared_ptr<Command>>& pipeline) {
     for (size_t i = 0; i<pipeline.size(); ++i) {
         auto command = pipeline.at(i);
         if (command->get_redirection() == "1>" || command->get_redirection() == ">") {
@@ -126,9 +126,9 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
  * 
  * @param pipeline the list of Commands
  */
-void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
+void run_pipeline(const std::vector<std::shared_ptr<Command>>& pipeline) {
     std::vector<pid_t> pids;
-    for (auto& cmd : pipeline) {
+    for (const auto& cmd : pipeline) {
         pid_t pid = execute(cmd);
         pids.push_back(pid);
     }

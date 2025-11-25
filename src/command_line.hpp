@@ -32,7 +32,6 @@ char * path_files_generator(const char *text, int state) {
     static std::vector<std::string> paths{};
     static size_t dir_index;
     static DIR *dir;
-    static struct dirent *entry;
 
     if (state == 0) {
         // First call: Open directory and return the first match.
@@ -52,7 +51,7 @@ char * path_files_generator(const char *text, int state) {
 
     // Find the next entry that matches
     while (dir && dir_index < paths.size()) {
-        if (entry = readdir(dir); entry) {
+        if (const auto& entry = readdir(dir); entry) {
             if (strncmp(entry->d_name, text, strlen(text)) == 0) {
                 return strdup(entry->d_name); // Return the FIRST match found on this call
             }

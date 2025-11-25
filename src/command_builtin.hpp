@@ -13,8 +13,8 @@
 namespace shell {
 class BuiltinCommand : public Command {
     public:
-        BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
-        void execute() {
+        explicit BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
+        void execute() override {
             shell::Logger::getInstance().debug("BuiltinCommand::execute", name);
             try {
                 if (where_is() != "") {
@@ -35,7 +35,7 @@ class BuiltinCommand : public Command {
                 std::cerr << name << ": not found" << std::endl;
             }
         }
-        std::string where_is() {
+        std::string where_is() override {
             return name;
         }
         static bool is_builtin(const std::string& name) {
@@ -46,11 +46,11 @@ class BuiltinCommand : public Command {
         }
     private:
         void cd(const  std::vector<std::string>& path = {}) {
-            if (auto p = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && p))
-                std::filesystem::current_path(std::string{p});
+            if (auto home_env = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && home_env))
+                std::filesystem::current_path(std::string{home_env});
             else if (path.size() > 1)
                 std::cerr << "cd: : too many arguments" << std::endl;
-            else if (!path.empty() && std::filesystem::exists(std::filesystem::path(path.at(0))))
+            else if (std::filesystem::exists(std::filesystem::path(path.at(0))))
                 std::filesystem::current_path(path.at(0));
             else
                 std::cerr << "cd: " + path.at(0) + ": No such file or directory" << std::endl;
@@ -73,7 +73,6 @@ class BuiltinCommand : public Command {
                 return;
             }
 
-            auto size = args.size();
             int number;
             auto result = std::from_chars(args.at(0).data(), args.at(0).data() + args.at(0).size(), number);
             if (result.ec == std::errc()) {
@@ -90,7 +89,7 @@ class BuiltinCommand : public Command {
             if (!args.empty()) std::cerr << "pwd: : too many arguments" << std::endl;
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
-        void type(const  std::vector<std::string>& args = {}) {
+        void type(const std::vector<std::string>& args = {}) { // cppcheck-suppress unusedPrivateFunction
             for (const auto& a : args) {
                 if (BuiltinCommand::is_builtin(a)) {
                     std::cout << a << " is a shell builtin" << std::endl;

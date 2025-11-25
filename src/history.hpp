@@ -110,7 +110,7 @@ public:
     }
 
 protected:
-    std::string get_path() {
+    const std::string& get_path() {
         return persistent_path;
     }
 private:
