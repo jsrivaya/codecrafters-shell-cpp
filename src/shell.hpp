@@ -14,11 +14,21 @@
 
 namespace shell{
 
+/**
+ * @brief Initializes shell prerequisites
+ * 
+ */
 void init () {
     // initialize readline library
     rl_init();
 }
 
+/**
+ * @brief Get the pipeline object
+ * 
+ * @param command_line string received from starndard input
+ * @return std::vector<std::shared_ptr<Command>> 
+ */
 std::vector<std::shared_ptr<Command>> get_commands(const std::string& command_line) {
     std::vector<std::shared_ptr<Command>> commands{};
     std::vector<std::string> args{};
@@ -57,6 +67,12 @@ pid_t spawn(std::shared_ptr<Command> command) {
     return pid;
 }
 
+/**
+ * @brief Executes one single command
+ * 
+ * @param command the command
+ * @return pid_t either shell pid if builtin command or custom command process pid
+ */
 pid_t execute(std::shared_ptr<Command> command) {
     shell::Logger::getInstance().debug("execute()", command->get_name());
     pid_t pid = -1;
@@ -70,6 +86,11 @@ pid_t execute(std::shared_ptr<Command> command) {
     return pid;
 }
 
+/**
+ * @brief Set the up and prepare pipeline object for execution
+ * 
+ * @param pipeline the list of Commands to prepare for execution
+ */
 void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     for (size_t i = 0; i<pipeline.size(); ++i) {
         auto command = pipeline.at(i);
@@ -100,6 +121,11 @@ void setup_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     }
 }
 
+/**
+ * @brief Executes a list of Commands
+ * 
+ * @param pipeline the list of Commands
+ */
 void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     std::vector<pid_t> pids;
     for (auto& cmd : pipeline) {
@@ -121,6 +147,11 @@ void run_pipeline(std::vector<std::shared_ptr<Command>> pipeline) {
     }
 }
 
+/**
+ * @brief Process a command line and executes the different commands and operators
+ * 
+ * @param command_line the standard input command line string
+ */
 void run(const std::string &command_line) {
 
     auto saved_stdin = dup(STDIN_FILENO);
