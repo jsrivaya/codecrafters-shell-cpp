@@ -6,12 +6,13 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <vector> 
+#include <vector>
 
 namespace shell {
-class CustomCommand : public Command {
-    public:
-        explicit CustomCommand(const std::string& name = "custom", const std::vector<std::string>&  args = {}) : Command(name, "custom", args) { };
+    class CustomCommand : public Command {
+      public:
+        explicit CustomCommand(const std::string& name = "custom", const std::vector<std::string>& args = {})
+            : Command(name, "custom", args) {};
         void execute() override {
             shell::Logger::getInstance().debug("CustomCommand::execute", name);
             try {
@@ -27,11 +28,12 @@ class CustomCommand : public Command {
             }
         }
         std::string where_is() override {
-            if(const auto p = std::getenv("PATH"); p) {
+            if (const auto p = std::getenv("PATH"); p) {
                 std::string path_env{p};
-                for(size_t start = 0; start < path_env.size();) {
+                for (size_t start = 0; start < path_env.size();) {
                     size_t end = path_env.find_first_of(":", start);
-                    if (end == std::string::npos) end = path_env.size();
+                    if (end == std::string::npos)
+                        end = path_env.size();
 
                     std::filesystem::path path = path_env.substr(start, end - start) + "/" + name;
                     if (std::filesystem::exists(path) && access(path.c_str(), X_OK) == 0) {
@@ -42,6 +44,6 @@ class CustomCommand : public Command {
             }
             throw std::runtime_error("not found");
         }
-};
+    };
 
 } // namespace shell

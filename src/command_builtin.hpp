@@ -11,9 +11,10 @@
 #include <fstream>
 
 namespace shell {
-class BuiltinCommand : public Command {
-    public:
-        explicit BuiltinCommand(const std::string& name, const std::vector<std::string>&  args = {}) : Command(name, "builtin", args) { };
+    class BuiltinCommand : public Command {
+      public:
+        explicit BuiltinCommand(const std::string& name, const std::vector<std::string>& args = {})
+            : Command(name, "builtin", args) {};
         void execute() override {
             shell::Logger::getInstance().debug("BuiltinCommand::execute", name);
             try {
@@ -22,12 +23,18 @@ class BuiltinCommand : public Command {
                     // others like: echo, exit, pwd, type are simple enough that forking would cause too much overhead
                     setup_io();
 
-                    if (name == "cd") cd(args);
-                    else if (name == "echo") echo(args);
-                    else if (name == "exit") exit_shell(args);
-                    else if (name == "history") history(args);
-                    else if (name == "pwd") pwd(args);
-                    else if (name == "type") type(args);
+                    if (name == "cd")
+                        cd(args);
+                    else if (name == "echo")
+                        echo(args);
+                    else if (name == "exit")
+                        exit_shell(args);
+                    else if (name == "history")
+                        history(args);
+                    else if (name == "pwd")
+                        pwd(args);
+                    else if (name == "type")
+                        type(args);
 
                     reset_io();
                 }
@@ -39,13 +46,15 @@ class BuiltinCommand : public Command {
             return name;
         }
         static bool is_builtin(const std::string& name) {
-            return name == "cd" || name == "echo" || name == "exit" || name == "history" || name == "pwd" || name == "type";
+            return name == "cd" || name == "echo" || name == "exit" || name == "history" || name == "pwd" ||
+                   name == "type";
         }
         static std::vector<std::string> get_all_commands() {
             return {"cd", "echo", "exit", "pwd", "type"};
         }
-    private:
-        void cd(const  std::vector<std::string>& path = {}) {
+
+      private:
+        void cd(const std::vector<std::string>& path = {}) {
             if (auto home_env = std::getenv("HOME"); path.empty() || (path.at(0) == "~" && home_env))
                 std::filesystem::current_path(std::string{home_env});
             else if (path.size() > 1)
@@ -58,7 +67,8 @@ class BuiltinCommand : public Command {
         void echo(const std::vector<std::string>& args = {}) {
             for (size_t i = 0; i < args.size(); ++i) {
                 std::cout << args[i];
-                if (i < args.size() - 1) std::cout << " ";
+                if (i < args.size() - 1)
+                    std::cout << " ";
             }
             std::cout << std::endl;
         }
@@ -68,7 +78,7 @@ class BuiltinCommand : public Command {
             exit(0);
         }
         void history(const std::vector<std::string>& args = {}) {
-            if(args.empty()) {
+            if (args.empty()) {
                 History::getInstance().print_last();
                 return;
             }
@@ -86,7 +96,8 @@ class BuiltinCommand : public Command {
             }
         }
         void pwd(const std::vector<std::string>& args = {}) {
-            if (!args.empty()) std::cerr << "pwd: : too many arguments" << std::endl;
+            if (!args.empty())
+                std::cerr << "pwd: : too many arguments" << std::endl;
             std::cout << std::filesystem::current_path().string() << std::endl;
         }
         void type(const std::vector<std::string>& args = {}) { // cppcheck-suppress unusedPrivateFunction
@@ -104,6 +115,6 @@ class BuiltinCommand : public Command {
                 }
             }
         }
-};
+    };
 
 } // namespace shell

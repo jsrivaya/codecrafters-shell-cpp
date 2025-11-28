@@ -2,18 +2,17 @@
 #include "shell.hpp"
 
 int main() {
+    // 1. Initialize logger
+    shell::Logger::getInstance().enable(shell::Logger::Level::INFO);
 
-  // 1. Initialize logger
-  shell::Logger::getInstance().enable(shell::Logger::Level::INFO);
+    // 2. Initialize shell
+    shell::init();
 
-  // 2. Initialize shell
-  shell::init();
+    do {
+        // 3. Read command line and Run shell
+        shell::run(shell::read_line());
 
-  do {
-    // 3. Read command line and Run shell
-    shell::run(shell::read_line());
+    } while (true);
 
-  } while(true);
-
-  exit(0);
+    exit(0);
 }
